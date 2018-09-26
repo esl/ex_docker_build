@@ -8,10 +8,13 @@ defmodule ExDockerBuild.DockerfileParserTest do
     {:ok, base_dir: base_dir}
   end
 
-  test "parses correctly a simple Dockerfile", %{base_dir: base_dir} do
-    result =
-      Path.join([base_dir, "Dockerfile_simple.dockerfile"])
+  def parse(base_dir,file) do
+    Path.join([base_dir, file])
       |> Parser.parse!
+  end
+
+  test "parses correctly a simple Dockerfile", %{base_dir: base_dir} do
+    result = parse(base_dir,"Dockerfile_simple.dockerfile")
 
     assert result == [
              {"FROM", "elixir:latest"},
@@ -28,9 +31,7 @@ defmodule ExDockerBuild.DockerfileParserTest do
   end
 
   test "parses correctly a the erlang Dockerfile", %{base_dir: base_dir} do
-    result =
-      Path.join([base_dir, "Dockerfile_erlang.dockerfile"])
-      |> Parser.parse!
+    result = parse(base_dir,"Dockerfile_erlang.dockerfile")
 
     assert result == [
              {"FROM", "buildpack-deps:stretch"},
