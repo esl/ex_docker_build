@@ -30,6 +30,17 @@ defmodule ExDockerBuild.DockerfileParserTest do
            ]
   end
 
+  test "parses correctly a bind mount Dockerfile", %{base_dir: base_dir} do
+    result = parse(base_dir,"Dockerfile_bind.dockerfile")
+
+    assert result == [
+            {"FROM", "elixir:1.7.3"},
+            {"VOLUME", "/Users/kiro/test:/data"},
+            {"RUN", "echo \"hello-world!!!!\" > /data/myfile.txt"},
+            {"CMD", "[\"cat\", \"/data/myfile.txt\"]"}
+           ]
+  end
+
   test "parses correctly a the erlang Dockerfile", %{base_dir: base_dir} do
     result = parse(base_dir,"Dockerfile_erlang.dockerfile")
 
