@@ -4,9 +4,10 @@ defmodule ExDockerBuild.DockerBuild do
   @env ~r/^\s*(\w+)[\s=]+(.*)$/
 
   alias ExDockerBuild.Utils.Map, as: MapUtils
+  alias ExDockerBuild.API.Docker
 
-  @spec build(list(String.t()), Path.t()) :: {:ok, DockerRemoteAPI.image_id()} | {:error, any()}
-  def(build(instructions, path)) do
+  @spec build(list(String.t()), Path.t()) :: {:ok, Docker.image_id()} | {:error, any()}
+  def build(instructions, path) do
     steps = length(instructions)
 
     try do

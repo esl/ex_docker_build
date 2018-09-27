@@ -1,4 +1,7 @@
-defmodule DockerRemoteAPI do
+defmodule ExDockerBuild.API.DockerRemoteAPI do
+  alias ExDockerBuild.API.Docker
+  @behaviour Docker
+
   @version "v1.37"
   @endpoint URI.encode_www_form("/var/run/docker.sock")
   @protocol "http+unix"
@@ -6,9 +9,7 @@ defmodule DockerRemoteAPI do
   @json_header {"Content-Type", "application/json"}
   @tar_header {"Content-Type", "application/tar"}
 
-  @type image_id :: String.t()
-  @type container_id :: String.t()
-
+  @impl Docker
   def commit(container_id, payload) do
     "#{@url}/commit"
     |> URI.parse()
@@ -17,6 +18,7 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.post(Poison.encode!(payload), [@json_header])
   end
 
+  @impl Docker
   def create_container(payload, params \\ %{}) do
     name = Map.get(payload, "ContainerName", "")
 
@@ -29,6 +31,7 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.post(Poison.encode!(payload), [@json_header])
   end
 
+  @impl Docker
   def remove_container(container_id, params \\ %{}) do
     "#{@url}/containers/#{container_id}"
     |> URI.parse()
@@ -37,10 +40,12 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.delete()
   end
 
-  def start_container(container_id, params \\ %{}) do
+  @impl Docker
+  def start_container(container_id) do
     HTTPoison.post("#{@url}/containers/#{container_id}/start", "", [])
   end
 
+  @impl Docker
   def stop_container(container_id) do
     "#{@url}/containers/#{container_id}/stop"
     |> URI.parse()
@@ -49,6 +54,7 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.post("", [], timeout: 30_000, recv_timeout: 30_000)
   end
 
+  @impl Docker
   def wait_container(container_id, timeout \\ :infinity) do
     HTTPoison.post("#{@url}/containers/#{container_id}/wait", "", [],
       timeout: timeout,
@@ -56,6 +62,7 @@ defmodule DockerRemoteAPI do
     )
   end
 
+  @impl Docker
   def upload_file(container_id, archive_payload, output_path) do
     query_params =
       URI.encode_query(%{
@@ -70,6 +77,7 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.put(archive_payload, [@tar_header])
   end
 
+  @impl Docker
   def pull(image) do
     # TODO:  ADD support for X-Registry-Auth
     "#{@url}/images/create"
@@ -79,6 +87,7 @@ defmodule DockerRemoteAPI do
     |> HTTPoison.post("", [], timeout: :infinity, recv_timeout: :infinity)
   end
 
+  @impl Docker
   def create_volume(payload) do
     HTTPoison.post("#{@url}/volumes/create", Poison.encode!(payload), [@json_header])
   end
