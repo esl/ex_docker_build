@@ -7,7 +7,7 @@ defmodule ExDockerBuild.DockerBuild do
   alias ExDockerBuild.API.Docker
 
   @spec build(list(String.t()), Path.t()) :: {:ok, Docker.image_id()} | {:error, any()}
-  def(build(instructions, path)) do
+  def build(instructions, path) do
     steps = length(instructions)
 
     try do

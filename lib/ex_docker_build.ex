@@ -20,8 +20,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec commit(Docker.container_id(), map()) ::
-          {:ok, Docker.image_id()} | {:error, any()}
+  @spec commit(Docker.container_id(), map()) :: {:ok, Docker.image_id()} | {:error, any()}
   def commit(container_id, payload) do
     case DockerRemoteAPI.commit(container_id, payload) do
       {:ok, %{body: body, status_code: 201}} ->
@@ -70,8 +69,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec start_container(Docker.container_id()) ::
-          {:ok, Docker.container_id()} | {:error, any()}
+  @spec start_container(Docker.container_id()) :: {:ok, Docker.container_id()} | {:error, any()}
   def start_container(container_id) do
     case DockerRemoteAPI.start_container(container_id) do
       {:ok, %{status_code: code}} when code in [204, 304] ->
@@ -85,8 +83,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec stop_container(Docker.container_id()) ::
-          {:ok, Docker.container_id()} | {:error, any()}
+  @spec stop_container(Docker.container_id()) :: {:ok, Docker.container_id()} | {:error, any()}
   def stop_container(container_id) do
     case DockerRemoteAPI.stop_container(container_id) do
       {:ok, %{status_code: status}} when status in [204, 304] ->
