@@ -15,7 +15,9 @@ defmodule ExDockerBuild.MixProject do
         "coveralls.post": :test,
         "coveralls.html": :test
       ],
-      dialyzer: [flags: [:error_handling, :race_conditions, :underspecs]]
+      dialyzer: [flags: [:error_handling, :race_conditions, :underspecs]],
+      package: package(),
+      description: description()
     ]
   end
 
@@ -30,7 +32,7 @@ defmodule ExDockerBuild.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.3.0"},
-      {:hackney, "~> 1.13.0", override: true},
+      {:hackney, "~> 1.13.0"},
       {:poison, "~> 4.0"},
       {:excoveralls, "~> 0.9", only: :test},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false},
@@ -38,6 +40,19 @@ defmodule ExDockerBuild.MixProject do
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
       # {:sibling_app_in_umbrella, in_umbrella: true},
+    ]
+  end
+
+  defp description() do
+    "Docker remote API client written in elixir for building docker images with support for bind mounting hosts file system at build time"
+  end
+
+  defp package() do
+    [
+      licenses: ["MIT"],
+      links: %{"GitHub" => "https://github.com/sescobb27/ex_docker_build"},
+      source_url: "https://github.com/sescobb27/ex_docker_build",
+      homepage_url: "https://github.com/sescobb27/ex_docker_build"
     ]
   end
 end
