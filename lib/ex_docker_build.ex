@@ -39,7 +39,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec commit(map(), map()) :: {:ok, Docker.container_id()} | {:error, any()}
+  @spec create_container(map(), map()) :: {:ok, Docker.container_id()} | {:error, any()}
   def create_container(payload, params \\ %{}) do
     case DockerRemoteAPI.create_container(payload, params) do
       {:ok, %{body: body, status_code: 201}} ->
