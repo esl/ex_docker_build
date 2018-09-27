@@ -10,11 +10,11 @@ use Mix.Config
 
 # You can configure your application as:
 #
-#     config :docker_api, key: :value
+#     config :ex_docker_build, key: :value
 #
 # and access this configuration in your application as:
 #
-#     Application.get_env(:docker_api, :key)
+#     Application.get_env(:ex_docker_build, :key)
 #
 # You can also configure a 3rd-party app:
 #
