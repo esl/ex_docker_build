@@ -2,8 +2,9 @@ defmodule ExDockerBuild do
   require Logger
 
   alias ExDockerBuild.Tar
+  alias ExDockerBuild.API.{Docker, DockerRemoteAPI}
 
-  @spec create_layer(map(), keyword()) :: {:ok, DockerRemoteAPI.image_id()} | {:error, any()}
+  @spec create_layer(map(), keyword()) :: {:ok, Docker.image_id()} | {:error, any()}
   def create_layer(payload, opts \\ []) do
     wait = Keyword.get(opts, :wait, false)
 
@@ -19,8 +20,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec commit(DockerRemoteAPI.container_id(), map()) ::
-          {:ok, DockerRemoteAPI.image_id()} | {:error, any()}
+  @spec commit(Docker.container_id(), map()) ::
+          {:ok, Docker.image_id()} | {:error, any()}
   def commit(container_id, payload) do
     case DockerRemoteAPI.commit(container_id, payload) do
       {:ok, %{body: body, status_code: 201}} ->
@@ -39,7 +40,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec commit(map(), map()) :: {:ok, DockerRemoteAPI.container_id()} | {:error, any()}
+  @spec commit(map(), map()) :: {:ok, Docker.container_id()} | {:error, any()}
   def create_container(payload, params \\ %{}) do
     case DockerRemoteAPI.create_container(payload, params) do
       {:ok, %{body: body, status_code: 201}} ->
@@ -55,7 +56,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec remove_container(DockerRemoteAPI.container_id(), map()) :: :ok | {:error, any()}
+  @spec remove_container(Docker.container_id(), map()) :: :ok | {:error, any()}
   def remove_container(container_id, params \\ %{}) do
     case DockerRemoteAPI.remove_container(container_id, params) do
       {:ok, %{status_code: 204}} ->
@@ -69,8 +70,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec start_container(DockerRemoteAPI.container_id()) ::
-          {:ok, DockerRemoteAPI.container_id()} | {:error, any()}
+  @spec start_container(Docker.container_id()) ::
+          {:ok, Docker.container_id()} | {:error, any()}
   def start_container(container_id) do
     case DockerRemoteAPI.start_container(container_id) do
       {:ok, %{status_code: code}} when code in [204, 304] ->
@@ -84,8 +85,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec stop_container(DockerRemoteAPI.container_id()) ::
-          {:ok, DockerRemoteAPI.container_id()} | {:error, any()}
+  @spec stop_container(Docker.container_id()) ::
+          {:ok, Docker.container_id()} | {:error, any()}
   def stop_container(container_id) do
     case DockerRemoteAPI.stop_container(container_id) do
       {:ok, %{status_code: status}} when status in [204, 304] ->
@@ -99,8 +100,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec maybe_wait_container(DockerRemoteAPI.container_id(), timeout) ::
-          {:ok, DockerRemoteAPI.container_id()} | {:error, any()}
+  @spec maybe_wait_container(Docker.container_id(), timeout) ::
+          {:ok, Docker.container_id()} | {:error, any()}
         when timeout: boolean() | pos_integer()
   def maybe_wait_container(container_id, timeout) when is_integer(timeout) do
     # wait some time for a container to be up and running
@@ -119,8 +120,8 @@ defmodule ExDockerBuild do
   def maybe_wait_container(container_id, true), do: wait_container(container_id)
   def maybe_wait_container(container_id, false), do: {:ok, container_id}
 
-  @spec wait_container(DockerRemoteAPI.container_id(), timeout) ::
-          {:ok, DockerRemoteAPI.container_id()} | {:error, any()}
+  @spec wait_container(Docker.container_id(), timeout) ::
+          {:ok, Docker.container_id()} | {:error, any()}
         when timeout: pos_integer() | :infinity
   def wait_container(container_id, timeout \\ :infinity) do
     case DockerRemoteAPI.wait_container(container_id, timeout) do
@@ -135,8 +136,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec upload_file(DockerRemoteAPI.container_id(), Path.t(), Path.t()) ::
-          {:ok, DockerRemoteAPI.container_id()} | {:error, any()} | no_return()
+  @spec upload_file(Docker.container_id(), Path.t(), Path.t()) ::
+          {:ok, Docker.container_id()} | {:error, any()} | no_return()
   def upload_file(container_id, input_path, output_path) do
     case Tar.tar(input_path, File.cwd!()) do
       {:ok, final_path} ->
@@ -162,7 +163,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec pull(DockerRemoteAPI.image_id()) :: :ok | {:error, any()}
+  @spec pull(Docker.image_id()) :: :ok | {:error, any()}
   def pull(image) do
     Logger.info("pulling image #{image}")
 
