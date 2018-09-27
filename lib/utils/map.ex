@@ -1,4 +1,5 @@
 defmodule ExDockerBuild.Utils.Map do
+  @spec contextual_merge(map(), map()) :: map()
   def contextual_merge(map1, map2) do
     Map.merge(map1, map2, fn
       # same value: do nothing
