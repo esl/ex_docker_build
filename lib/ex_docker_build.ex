@@ -133,6 +133,13 @@ defmodule ExDockerBuild do
     end
   end
 
+  @spec containers_logs(Docker.container_id(), map()) ::
+          {:error, HTTPoison.Error.t()} | {:ok, [String.t()]}
+  def containers_logs(container_id, params \\ %{}) do
+    DockerRemoteAPI.containers_logs(container_id, params, stream_to: self())
+    |> DockerRemoteAPI.process_stream()
+  end
+
   @spec upload_file(Docker.container_id(), Path.t(), Path.t()) ::
           {:ok, Docker.container_id()} | {:error, any()} | no_return()
   def upload_file(container_id, input_path, output_path) do
