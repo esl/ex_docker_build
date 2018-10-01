@@ -79,7 +79,10 @@ Then if you run `ls ~/test` you should see a file named `myfile.txt` with
 
 - Doesn't support relative paths in the container when `COPY`ing
   - `COPY ./relative/path/to/origin:/absolute/path/to/destination`
-- Doesn't support building `VOLUMES` only [Bind Mounts](https://docs.docker.com/storage/bind-mounts/)
+- Doesn't support standard `VOLUMES`, it only supports the following `VOLUME`s type
+with custom syntax
+  - [Bind Mounts](https://docs.docker.com/storage/bind-mounts/) e.g `VOLUME ~/path/to/host/dir:/path/to/container/dir`
+  - [Named Modules](https://docs.docker.com/storage/volumes/) e.g `VOLUME volume_name` and then using it like `VOLUME volume_name:/path/to/container/dir`
 
 ## TODO:
 

@@ -41,6 +41,28 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert File.exists?(@file_path)
       assert File.read!(@file_path) == "hello-world!!!!\n"
     end
+
+    test "build docker image relative binding a mount at build time" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"VOLUME", ".:/data"},
+        {"RUN", "echo \"hello-relative-world!!!!\" > /data/myfile.txt"},
+        {"CMD", "[\"cat\", \"/data/myfile.txt\"]"}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+        end)
+
+      assert log =~ "STEP 2/4 : VOLUME .:/data"
+      # TODO: delete image on exit
+      # on_exit(fn ->
+
+      # end)
+      assert File.exists?(@file_path)
+      assert File.read!(@file_path) == "hello-relative-world!!!!\n"
+    end
   end
 
   describe "mount a named volume" do
