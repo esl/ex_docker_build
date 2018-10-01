@@ -129,32 +129,40 @@ defmodule ExDockerBuild.DockerBuild do
   # defp exec({"ARG", args}, context, _path) do
   # end
 
+  # Supports:
+  # VOLUME volume_name for named volumes
+  # VOLUME /path/in/host:/path/in/container for bind mounting a directory
+  # VOLUME volume_name:/path/in/container for mounting a named volume
+  # doesn't support standard VOLUME /path/in/container
   defp exec({"VOLUME", args}, context, _path) do
-    String.split(args, ":")
-    |> case do
-      [_volume] ->
-        {:error, "Only Bind Mounts are Supported"}
-
-      [_src, _dst] ->
-        mounts = %{
-          "HostConfig" => %{
-            "Binds" => [args]
-          }
+    if args =~ ":" do
+      mounts = %{
+        "HostConfig" => %{
+          "Binds" => [args]
         }
+      }
 
-        Map.merge(context, mounts)
-        |> ExDockerBuild.create_layer()
-        |> case do
-          {:ok, new_image_id} ->
-            new_ctx =
-              %{"Image" => new_image_id}
-              |> Map.merge(mounts)
+      Map.merge(context, mounts)
+      |> ExDockerBuild.create_layer()
+      |> case do
+        {:ok, new_image_id} ->
+          new_ctx =
+            %{"Image" => new_image_id}
+            |> Map.merge(mounts)
 
-            MapUtils.contextual_merge(context, new_ctx)
+          MapUtils.contextual_merge(context, new_ctx)
 
-          {:error, _} = error ->
-            error
-        end
+        {:error, _} = error ->
+          error
+      end
+    else
+      case ExDockerBuild.create_volume(%{"Name" => args}) do
+        :ok ->
+          context
+
+        {:error, _} = error ->
+          error
+      end
     end
   end
 
