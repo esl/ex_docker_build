@@ -1,5 +1,5 @@
 defmodule ExDockerBuild.Stream.Worker do
-  use GenServer
+  use GenServer, restart: :temporary
 
   @timeout 10_000
 
