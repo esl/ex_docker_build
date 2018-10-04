@@ -8,7 +8,7 @@ defmodule ExDockerBuild.HttpStream do
   @doc """
     Returns HTTP response wrapped into Stream.
   """
-  @spec new_stream(String.t()) :: Enum.t()
+  @spec new_stream(String.t(), keyword()) :: Enum.t()
   def new_stream(url, opts \\ []) do
     Stream.resource(init_fun(url, opts), &next_fun/1, &after_fun/1)
   end

@@ -1,5 +1,6 @@
 defmodule ExDockerBuild.API.DockerRemoteAPI do
   alias ExDockerBuild.API.Docker
+  alias ExDockerBuild.HttpStream
   @behaviour Docker
 
   @version "v1.37"
@@ -67,11 +68,22 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     default_params = %{stdout: 1, stderr: 1, tail: "all", timestamps: 1, follow: 0}
     final_params = Map.merge(default_params, params)
 
-    "#{@url}/containers/#{container_id}/logs"
-    |> URI.parse()
-    |> Map.put(:query, URI.encode_query(final_params))
-    |> URI.to_string()
-    |> HTTPoison.get([], opts)
+    url =
+      "#{@url}/containers/#{container_id}/logs"
+      |> URI.parse()
+      |> Map.put(:query, URI.encode_query(final_params))
+      |> URI.to_string()
+
+    try do
+      logs =
+        url
+        |> HttpStream.new_stream(opts)
+        |> Enum.to_list()
+
+      {:ok, logs}
+    catch
+      :exit, _ -> {:error, :failed_to_stream_logs}
+    end
   end
 
   @impl Docker
@@ -102,41 +114,5 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   @impl Docker
   def create_volume(payload) do
     HTTPoison.post("#{@url}/volumes/create", Poison.encode!(payload), [@json_header])
-  end
-
-  @spec process_stream({:error, HTTPoison.Error.t()} | {:ok, HTTPoison.AsyncResponse.t()}) ::
-          {:error, HTTPoison.Error.t()} | {:ok, [String.t()]}
-  def process_stream({:ok, %HTTPoison.AsyncResponse{id: id}}) do
-    stream_loop(id, [])
-  end
-
-  def process_stream({:error, _} = error), do: error
-
-  @spec stream_loop(reference(), list(String.t())) ::
-          {:ok, list(String.t())} | {:error, HTTPoison.Error.t()}
-  defp stream_loop(stream_id, acc) do
-    receive do
-      %HTTPoison.AsyncStatus{id: ^stream_id, code: _code} ->
-        stream_loop(stream_id, acc)
-
-      %HTTPoison.AsyncHeaders{headers: _headers, id: ^stream_id} ->
-        stream_loop(stream_id, acc)
-
-      %HTTPoison.AsyncChunk{id: ^stream_id, chunk: chunk} ->
-        case chunk do
-          # WIP: Support for containers attach
-          <<_stream_type::8, 0, 0, 0, _size::32, payload::binary>> ->
-            stream_loop(stream_id, [payload | acc])
-
-          _ ->
-            stream_loop(stream_id, [chunk | acc])
-        end
-
-      %HTTPoison.AsyncEnd{id: ^stream_id} ->
-        {:ok, Enum.reverse(acc)}
-
-      %HTTPoison.Error{id: ^stream_id} = error ->
-        {:error, error}
-    end
   end
 end

@@ -25,8 +25,8 @@ defmodule ExDockerBuild.Stream.Worker do
   end
 
   @spec start_link(String.t()) :: GenServer.on_start()
-  def start_link(url, opts \\ []) do
-    GenServer.start_link(__MODULE__, [url, opts])
+  def start_link(args) do
+    GenServer.start_link(__MODULE__, args)
   end
 
   @spec stop(pid) :: :ok
@@ -101,14 +101,16 @@ defmodule ExDockerBuild.Stream.Worker do
     {:noreply, state}
   end
 
-  # Handle status, do nothing if successful
-  def handle_info(%HTTPoison.AsyncStatus{code: 200, id: id}, %{id: id} = state) do
+  # Handle status, do nothing if successful (200, 201, 204, 301, 304 etc)
+  def handle_info(%HTTPoison.AsyncStatus{code: code, id: id}, %{id: id} = state)
+      when code >= 200 and code < 400 do
     {:noreply, state}
   end
 
-  # Handle status, stop if response is not 200
-  def handle_info(%HTTPoison.AsyncStatus{code: code, id: id}, %{id: id} = state) do
-    {:stop, {:bad_code, code}, state}
+  # Handle error codes
+  def handle_info(%HTTPoison.AsyncStatus{code: code, id: id}, %{id: id} = state)
+      when code >= 400 do
+    {:stop, {:error, code}, state}
   end
 
   # stop if response there was an error

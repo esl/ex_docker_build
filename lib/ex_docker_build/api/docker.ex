@@ -1,5 +1,5 @@
 defmodule ExDockerBuild.API.Docker do
-  alias HTTPoison.{Response, AsyncResponse, Error}
+  alias HTTPoison.{Response, Error}
 
   @type image_id :: String.t()
   @type container_id :: String.t()
@@ -12,7 +12,7 @@ defmodule ExDockerBuild.API.Docker do
   @callback wait_container(container_id(), pos_integer() | :infinity) ::
               {:ok, Response.t()} | {:error, Error.t()}
   @callback containers_logs(container_id(), params, keyword()) ::
-              {:ok, AsyncResponse.t()} | {:error, Error.t()}
+              {:ok, list(String.t())} | {:error, any()}
             when params: %{
                    optional(:stdout) => 1 | 0,
                    optional(:stderr) => 1 | 0,
