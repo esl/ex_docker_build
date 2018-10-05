@@ -136,9 +136,13 @@ defmodule ExDockerBuild.DockerBuild do
   # doesn't support standard VOLUME /path/in/container
   defp exec({"VOLUME", args}, context, _path) do
     if args =~ ":" do
+      [src, dst | _] = String.split(args, ":")
+      absolute_src = Path.expand(src)
+      expanded_mount = absolute_src <> ":" <> dst
+
       mounts = %{
         "HostConfig" => %{
-          "Binds" => [args]
+          "Binds" => [expanded_mount]
         }
       }
 

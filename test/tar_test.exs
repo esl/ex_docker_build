@@ -20,13 +20,13 @@ defmodule ExDockerBuild.TarTest do
       assert File.exists?(path)
       assert Path.extname(path) == ".tar"
 
-      assert :erl_tar.table(path) ==
-               {:ok,
-                [
-                  'Dockerfile_bind.dockerfile',
-                  'Dockerfile_erlang.dockerfile',
-                  'Dockerfile_simple.dockerfile'
-                ]}
+      assert {:ok, files} = :erl_tar.table(path)
+
+      assert Enum.sort(files) == [
+               'Dockerfile_bind.dockerfile',
+               'Dockerfile_erlang.dockerfile',
+               'Dockerfile_simple.dockerfile'
+             ]
     end
 
     test "tar a file" do
