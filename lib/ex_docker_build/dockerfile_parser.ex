@@ -3,10 +3,17 @@ defmodule ExDockerBuild.DockerfileParser do
   @continuation ~r/^.*\\\s*$/
   @instruction ~r/^\s*(\w+)\s+(.*)$/
 
-  @spec parse!(Path.t()) :: list(String.t()) | no_return()
-  def parse!(path) do
+  @spec parse!(Path.t() | String.t()) :: list(String.t()) | no_return()
+  def parse!(path_or_content) do
+    content =
+      if File.exists?(path_or_content) do
+        File.read!(path_or_content)
+      else
+        path_or_content
+      end
+
     {parsed_lines, _} =
-      File.read!(path)
+      content
       |> String.split("\n")
       |> Enum.reduce({[], false}, fn line, {acc, continuation?} ->
         case parse_line(line, continuation?) do

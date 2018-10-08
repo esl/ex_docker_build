@@ -58,4 +58,22 @@ defmodule ExDockerBuild.DockerfileParserTest do
               "set -xe  && REBAR3_DOWNLOAD_URL=\"https://github.com/erlang/rebar3/archive/${REBAR3_VERSION}.tar.gz\"  && REBAR3_DOWNLOAD_SHA256=\"40b3c85440f3235c7b149578d0211bdf57d1c66390f888bb771704f8abc71033\"  && mkdir -p /usr/src/rebar3-src  && curl -fSL -o rebar3-src.tar.gz \"$REBAR3_DOWNLOAD_URL\"  && echo \"$REBAR3_DOWNLOAD_SHA256 rebar3-src.tar.gz\" | sha256sum -c -  && tar -xzf rebar3-src.tar.gz -C /usr/src/rebar3-src --strip-components=1  && rm rebar3-src.tar.gz  && cd /usr/src/rebar3-src  && HOME=$PWD ./bootstrap  && install -v ./rebar3 /usr/local/bin/  && rm -rf /usr/src/rebar3-src"}
            ]
   end
+
+  test "parses file content instead of a file" do
+    content = """
+    FROM elixir:1.7.3
+    VOLUME /Users/kiro/test:/data
+    RUN echo "hello-world!!!!" > /data/myfile.txt
+    CMD ["cat", "/data/myfile.txt"]
+    """
+
+    result = Parser.parse!(content)
+
+    assert result == [
+             {"FROM", "elixir:1.7.3"},
+             {"VOLUME", "/Users/kiro/test:/data"},
+             {"RUN", "echo \"hello-world!!!!\" > /data/myfile.txt"},
+             {"CMD", "[\"cat\", \"/data/myfile.txt\"]"}
+           ]
+  end
 end
