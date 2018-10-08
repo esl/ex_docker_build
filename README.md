@@ -16,7 +16,7 @@ by adding `ex_docker_build` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_docker_build, "~> 0.1.0"}
+    {:ex_docker_build, "~> 0.2.0"}
   ]
 end
 ```
