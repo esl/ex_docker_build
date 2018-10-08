@@ -44,7 +44,7 @@ Start a mix session with `iex -S mix` and type the following instructions
 path = Path.expand("~/workspace/elixir-docker-guide")
 
 {:ok, image_id} = Path.join([path, "Dockerfile"]) |>
-  ExDockerBuild.DockerfileParser.parse!() |>
+  ExDockerBuild.DockerfileParser.parse_file!() |>
   ExDockerBuild.DockerBuild.build(path)
 ```
 
@@ -68,7 +68,7 @@ $> mkdir ~/test
 path = Path.expand("./test/fixtures")
 
 {:ok, image_id} = Path.join([path, "Dockerfile_bind.dockerfile"]) |>
-  ExDockerBuild.DockerfileParser.parse!() |>
+  ExDockerBuild.DockerfileParser.parse_file!() |>
   ExDockerBuild.DockerBuild.build(path)
 ```
 
