@@ -10,7 +10,7 @@ defmodule ExDockerBuild.DockerfileParserTest do
 
   def parse(base_dir, file) do
     Path.join([base_dir, file])
-    |> Parser.parse!()
+    |> Parser.parse_file!()
   end
 
   test "parses correctly a simple Dockerfile", %{base_dir: base_dir} do
@@ -67,7 +67,7 @@ defmodule ExDockerBuild.DockerfileParserTest do
     CMD ["cat", "/data/myfile.txt"]
     """
 
-    result = Parser.parse!(content)
+    result = Parser.parse_content!(content)
 
     assert result == [
              {"FROM", "elixir:1.7.3"},

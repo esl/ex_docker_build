@@ -3,15 +3,18 @@ defmodule ExDockerBuild.DockerfileParser do
   @continuation ~r/^.*\\\s*$/
   @instruction ~r/^\s*(\w+)\s+(.*)$/
 
-  @spec parse!(Path.t() | String.t()) :: list(String.t()) | no_return()
-  def parse!(path_or_content) do
-    content =
-      if File.exists?(path_or_content) do
-        File.read!(path_or_content)
-      else
-        path_or_content
-      end
+  @spec parse_file!(Path.t()) :: list(String.t()) | no_return()
+  def parse_file!(path) do
+    path
+    |> File.read!()
+    |> do_parse()
+  end
 
+  @spec parse_content!(String.t()) :: list(String.t()) | no_return()
+  def parse_content!(content), do: do_parse(content)
+
+  @spec do_parse(String.t()) :: list(String.t())
+  defp do_parse(content) do
     {parsed_lines, _} =
       content
       |> String.split("\n")
