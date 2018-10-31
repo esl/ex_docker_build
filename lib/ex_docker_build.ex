@@ -195,4 +195,20 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec delete_image(Docker.image_id()) :: :ok | {:error, any()}
+  def delete_image(image) do
+    Logger.info("deleting image #{image}")
+
+    case DockerRemoteAPI.delete_image(image) do
+      {:ok, %{status_code: 200}} ->
+        :ok
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
 end
