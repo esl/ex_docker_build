@@ -120,7 +120,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   def delete_image(image_id) do
     "#{@url}/images/#{image_id}"
     |> URI.parse()
-    |> Map.put(:query, URI.encode_query(%{"fromImage" => image_id}))
+    |> Map.put(:query, URI.encode_query(%{"force" => image_id}))
     |> URI.to_string()
     |> HTTPoison.delete()
   end

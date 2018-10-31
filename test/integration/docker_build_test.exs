@@ -27,7 +27,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       log =
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
-          ExDockerBuild.delete_image(image_id)
+          assert :ok = ExDockerBuild.delete_image(image_id)
         end)
 
       assert log =~ "STEP 1/4 : FROM alpine:latest"
@@ -35,10 +35,6 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 2/4 : VOLUME #{@cwd}:/data"
       assert log =~ "STEP 3/4 : RUN echo \"hello-world!!!!\" > /data/myfile.txt"
       assert log =~ "STEP 4/4 : CMD [\"cat\", \"/data/myfile.txt\"]"
-      # TODO: delete image on exit
-      # on_exit(fn ->
-
-      # end)
       assert File.exists?(@file_path)
       assert File.read!(@file_path) == "hello-world!!!!\n"
     end
@@ -54,14 +50,10 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       log =
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
-          ExDockerBuild.delete_image(image_id)
+          assert :ok = ExDockerBuild.delete_image(image_id)
         end)
 
       assert log =~ "STEP 2/4 : VOLUME .:/data"
-      # TODO: delete image on exit
-      # on_exit(fn ->
-
-      # end)
       assert File.exists?(@file_path)
       assert File.read!(@file_path) == "hello-relative-world!!!!\n"
     end
@@ -92,6 +84,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
             error ->
               assert error == nil, "should not be an error"
           end
+          assert :ok = ExDockerBuild.delete_image(image_id)
         end)
 
       assert log =~ "STEP 1/6 : FROM alpine:latest"
