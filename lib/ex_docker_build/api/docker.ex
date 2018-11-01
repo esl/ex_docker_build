@@ -5,7 +5,7 @@ defmodule ExDockerBuild.API.Docker do
   @type container_id :: String.t()
 
   @callback commit(container_id(), map()) :: {:ok, Response.t()} | {:error, Error.t()}
-  @callback delete_image(image_id()) :: {:ok, Response.t()} | {:error, Error.t()}
+  @callback delete_image(image_id(), boolean()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback create_container(map(), map()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback remove_container(container_id(), map()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback start_container(container_id()) :: {:ok, Response.t()} | {:error, Error.t()}

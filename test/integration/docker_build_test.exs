@@ -27,7 +27,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       log =
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
-          assert :ok = ExDockerBuild.delete_image(image_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
       assert log =~ "STEP 1/4 : FROM alpine:latest"
@@ -50,7 +50,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       log =
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
-          assert :ok = ExDockerBuild.delete_image(image_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
       assert log =~ "STEP 2/4 : VOLUME .:/data"
@@ -84,7 +84,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
             error ->
               assert error == nil, "should not be an error"
           end
-          assert :ok = ExDockerBuild.delete_image(image_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
       assert log =~ "STEP 1/6 : FROM alpine:latest"
