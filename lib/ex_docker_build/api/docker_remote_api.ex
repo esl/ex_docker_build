@@ -115,4 +115,13 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   def create_volume(payload) do
     HTTPoison.post("#{@url}/volumes/create", Poison.encode!(payload), [@json_header])
   end
+
+  @impl Docker
+  def delete_image(image_id, force) do
+    "#{@url}/images/#{image_id}"
+    |> URI.parse()
+    |> Map.put(:query, URI.encode_query(%{"force" => force}))
+    |> URI.to_string()
+    |> HTTPoison.delete()
+  end
 end
