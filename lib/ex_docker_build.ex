@@ -216,4 +216,15 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec authenticate(list(String.t())) :: {:ok, any(), any()} | {:error, any()}
+  def authenticate(data) do
+    Logger.info("Requesting authentication")
+    case DockerRemoteAPI.auth(Enum.into(data, %{})) do
+      {:ok, %{status_code: status_code}} ->
+        {:ok, status_code: status_code}
+      {:error, body, start_container} ->
+        {:error, body}
+    end
+  end
 end

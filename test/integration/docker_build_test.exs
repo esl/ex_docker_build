@@ -96,4 +96,16 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 6/6 : CMD [\"cat\", \"/myvol/greeting\"]"
     end
   end
+
+  describe "authentication" do
+    test "try authenticate an illegal user" do
+      instructions = [
+        {"username", "hannibal"},
+        {"password", "xxxx"},
+        {"serveraddress", "https://index.docker.io/v1/"}
+      ]
+
+      assert {:ok, [status_code: 401]} = ExDockerBuild.authenticate(instructions)
+    end
+  end
 end

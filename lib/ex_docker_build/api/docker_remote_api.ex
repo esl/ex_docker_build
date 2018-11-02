@@ -124,4 +124,9 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.delete()
   end
+
+  @impl Docker
+  def auth(userdata) do
+    HTTPoison.post("#{@url}/auth", Poison.encode!(userdata), [@json_header])
+  end
 end
