@@ -99,7 +99,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
   describe "authentication" do
     test "try authenticate an illegal user" do
-      assert {:ok, body} = ExDockerBuild.authenticate("hannibal", "xxxx", 
+      assert {:error, body} = ExDockerBuild.authenticate("hannibal", "xxxx", 
                                                   "https://index.docker.io/v1/")
     end
   end

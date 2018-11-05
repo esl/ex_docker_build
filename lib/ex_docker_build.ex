@@ -230,9 +230,11 @@ defmodule ExDockerBuild do
     att = %{:username => username, :password => password,
             :serveraddress => serveraddress, :email => email}
     case DockerRemoteAPI.auth(att) do
-      {:ok, %{status_code: _, body: body}} ->
+      {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
         {:ok, body}
-      {:error, reason} ->
+      {:ok, %HTTPoison.Response{status_code: _, body: body}} ->
+        {:error, body}
+      {:error, %HTTPoison.Error{reason: reason}} ->
         {:error, reason}
     end
   end
