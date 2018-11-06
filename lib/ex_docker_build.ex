@@ -133,8 +133,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec containers_logs(Docker.container_id(), map()) ::
-          {:error, any()} | {:ok, [String.t()]}
+  @spec containers_logs(Docker.container_id(), map()) :: {:error, any()} | {:ok, [String.t()]}
   def containers_logs(container_id, params \\ %{}) do
     DockerRemoteAPI.containers_logs(container_id, params, stream_to: self())
   end

@@ -84,6 +84,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
             error ->
               assert error == nil, "should not be an error"
           end
+
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
