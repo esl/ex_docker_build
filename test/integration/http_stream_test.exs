@@ -26,13 +26,15 @@ defmodule ExDockerBuild.Integration.HttpStreamTest do
   end
 
   describe "http streaming with error codes" do
-    @tag capture_log: true # Silence GenServer crash
+    # Silence GenServer crash
+    @tag capture_log: true
     test "exits on invalid url" do
       stream = HttpStream.new_stream("fake_url")
       assert {:noproc, _} = catch_exit(Stream.run(stream))
     end
 
-    @tag capture_log: true # Silence GenServer crash
+    # Silence GenServer crash
+    @tag capture_log: true
     test "exits on 404 " do
       stream = HttpStream.new_stream("https://github.com/fakeuser/f@k3")
       assert {:noproc, _} = catch_exit(Stream.run(stream))

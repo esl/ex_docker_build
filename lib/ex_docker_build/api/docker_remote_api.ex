@@ -124,4 +124,50 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.delete()
   end
+
+  @impl Docker
+  def push_image(image_id, tag, %{
+        docker_username: docker_username,
+        docker_password: docker_password,
+        docker_servername: docker_servername
+      }) do
+    docker_credentials = %{
+      "username" => docker_username,
+      "password" => docker_password,
+      "servername" => docker_servername
+    }
+
+    header =
+      Poison.encode!(docker_credentials)
+      |> Base.encode64()
+
+    "#{@url}/images/#{image_id}/push"
+    |> URI.parse()
+    |> Map.put(:query, URI.encode_query(%{"tag" => tag}))
+    |> URI.to_string()
+    |> HTTPoison.post("", [{"X-Registry-Auth", header}])
+  end
+
+  @impl Docker
+  def tag_image(image_id, repo, tag, %{
+        docker_username: docker_username,
+        docker_password: docker_password,
+        docker_servername: docker_servername
+      }) do
+    docker_credentials = %{
+      "username" => docker_username,
+      "password" => docker_password,
+      "servername" => docker_servername
+    }
+
+    header =
+      Poison.encode!(docker_credentials)
+      |> Base.encode64()
+
+    "#{@url}/images/#{image_id}/tag"
+    |> URI.parse()
+    |> Map.put(:query, URI.encode_query(%{"repo" => repo, "tag" => tag}))
+    |> URI.to_string()
+    |> HTTPoison.post("", [{"X-Registry-Auth", header}])
+  end
 end

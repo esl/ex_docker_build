@@ -3,6 +3,13 @@ defmodule ExDockerBuild.API.Docker do
 
   @type image_id :: String.t()
   @type container_id :: String.t()
+  @type repository_name :: String.t()
+  @type tag_name :: String.t()
+  @type docker_credentials :: %{
+          required(:docker_username) => String.t(),
+          required(:docker_password) => String.t(),
+          required(:docker_servername) => String.t()
+        }
 
   @callback commit(container_id(), map()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback delete_image(image_id(), boolean()) :: {:ok, Response.t()} | {:error, Error.t()}
@@ -25,4 +32,8 @@ defmodule ExDockerBuild.API.Docker do
               {:ok, Response.t()} | {:error, Error.t()}
   @callback pull(image_id()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback create_volume(map()) :: {:ok, Response.t()} | {:error, Error.t()}
+  @callback push_image(image_id(), String.t(), docker_credentials()) ::
+              {:ok, Response.t()} | {:error, Error.t()}
+  @callback tag_image(image_id(), repository_name(), tag_name(), docker_credentials()) ::
+              {:ok, Response.t()} | {:error, Error.t()}
 end

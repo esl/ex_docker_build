@@ -84,6 +84,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
             error ->
               assert error == nil, "should not be an error"
           end
+
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
@@ -94,6 +95,28 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 4/6 : VOLUME vol_storage"
       assert log =~ "STEP 5/6 : VOLUME vol_storage:/myvol"
       assert log =~ "STEP 6/6 : CMD [\"cat\", \"/myvol/greeting\"]"
+    end
+  end
+
+  describe "tagging an image" do
+    test "build docker image mounting a named volume" do
+      instructions = [
+        {"FROM", "alpine:latest"}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+
+          assert :ok =
+                   ExDockerBuild.tag_image(image_id, "fake/fake_testci", "v1.0.0", %{
+                     docker_username: "",
+                     docker_password: "",
+                     docker_servername: ""
+                   })
+        end)
+
+      assert log =~ "STEP 1/1 : FROM alpine:latest"
     end
   end
 end

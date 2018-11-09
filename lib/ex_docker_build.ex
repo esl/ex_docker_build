@@ -133,8 +133,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec containers_logs(Docker.container_id(), map()) ::
-          {:error, any()} | {:ok, [String.t()]}
+  @spec containers_logs(Docker.container_id(), map()) :: {:error, any()} | {:ok, [String.t()]}
   def containers_logs(container_id, params \\ %{}) do
     DockerRemoteAPI.containers_logs(container_id, params, stream_to: self())
   end
@@ -207,6 +206,42 @@ defmodule ExDockerBuild do
 
     case DockerRemoteAPI.delete_image(image, force) do
       {:ok, %{status_code: 200}} ->
+        :ok
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec push_image(Docker.image_id(), Docker.tag_name(), Docker.docker_credentials()) ::
+          :ok | {:error, any()}
+  def push_image(image, tag_name, credentials) do
+    Logger.info("pushing image id #{image} to docker registry")
+
+    case DockerRemoteAPI.push_image(image, tag_name, credentials) do
+      {:ok, %{status_code: 200}} ->
+        :ok
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec tag_image(
+          Docker.image_id(),
+          Docker.repository_name(),
+          Docker.tag_name(),
+          Docker.docker_credentials()
+        ) :: :ok | {:error, any()}
+  def tag_image(image, repo_name, tag_name, credentials) do
+    case DockerRemoteAPI.tag_image(image, repo_name, tag_name, credentials) do
+      {:ok, %{status_code: 201}} ->
         :ok
 
       {:ok, %{body: body, status_code: _}} ->
