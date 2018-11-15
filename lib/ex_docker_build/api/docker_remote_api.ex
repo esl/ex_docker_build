@@ -170,4 +170,13 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.post("", [{"X-Registry-Auth", header}])
   end
+
+  @impl Docker
+  def container_inspect(container_id, size) do
+    "#{@url}/containers/#{container_id}/json"
+    |> URI.parse()
+    |> Map.put(:query, URI.encode_query(%{"size" => size}))
+    |> URI.to_string()
+    |> HTTPoison.get()
+  end
 end

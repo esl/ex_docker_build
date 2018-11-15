@@ -123,8 +123,10 @@ defmodule ExDockerBuild.DockerBuild do
   # defp exec({"LABEL", args}, context, _path) do
   # end
 
-  # defp exec({"EXPOSE", args}, context, _path) do
-  # end
+  defp exec({"EXPOSE", args}, context, _path) do
+    Map.merge(context, %{"Ports" => args})
+    |> ExDockerBuild.create_layer()
+  end
 
   # defp exec({"ARG", args}, context, _path) do
   # end
