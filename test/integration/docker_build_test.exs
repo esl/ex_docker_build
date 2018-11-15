@@ -84,6 +84,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
             error ->
               assert error == nil, "should not be an error"
           end
+
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
@@ -94,6 +95,31 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 4/6 : VOLUME vol_storage"
       assert log =~ "STEP 5/6 : VOLUME vol_storage:/myvol"
       assert log =~ "STEP 6/6 : CMD [\"cat\", \"/myvol/greeting\"]"
+    end
+  end
+
+  describe "container listens on the specified network ports" do
+    test "inspecting container by container id" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"VOLUME", @cwd <> ":/data"},
+        {"RUN", "echo \"hello-world!!!!\" > /data/myfile.txt"},
+        {"CMD", "[\"cat\", \"/data/myfile.txt\"]"},
+        {"EXPOSE", "80/tcp"}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, container_id} == ExDockerBuild.start_container(container_id)
+          assert {:ok, container_id} == ExDockerBuild.stop_container(container_id)
+          assert {:ok, body} = ExDockerBuild.container_inspect(container_id, false)
+          assert :ok = ExDockerBuild.remove_container(container_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+        end)
+
+      assert log =~ "STEP 5/5 : EXPOSE 80/tcp"
     end
   end
 end
