@@ -133,8 +133,7 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec containers_logs(Docker.container_id(), map()) ::
-          {:error, any()} | {:ok, [String.t()]}
+  @spec containers_logs(Docker.container_id(), map()) :: {:error, any()} | {:ok, [String.t()]}
   def containers_logs(container_id, params \\ %{}) do
     DockerRemoteAPI.containers_logs(container_id, params, stream_to: self())
   end
@@ -208,6 +207,22 @@ defmodule ExDockerBuild do
     case DockerRemoteAPI.delete_image(image, force) do
       {:ok, %{status_code: 200}} ->
         :ok
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec container_inspect(Docker.container_id(), boolean()) :: {:ok, any()} | {:error, any()}
+  def container_inspect(container_id, size) do
+    Logger.info("inspecting container by container id #{container_id}")
+
+    case DockerRemoteAPI.container_inspect(container_id, size) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, body}
 
       {:ok, %{body: body, status_code: _}} ->
         {:error, body}
