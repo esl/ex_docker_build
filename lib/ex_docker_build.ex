@@ -243,12 +243,14 @@ defmodule ExDockerBuild do
     case DockerRemoteAPI.tag_image(image, repo_name, tag_name, credentials) do
       {:ok, %{status_code: 201}} ->
         :ok
-        {:ok, %{body: body, status_code: _}} ->
-          {:error, body}
-        {:error, %{reason: reason}} ->
-          {:error, reason}
-      end
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
     end
+  end
 
   @spec container_inspect(Docker.container_id(), boolean()) :: {:ok, any()} | {:error, any()}
   def container_inspect(container_id, size) do
@@ -256,9 +258,11 @@ defmodule ExDockerBuild do
 
     case DockerRemoteAPI.container_inspect(container_id, size) do
       {:ok, %{status_code: 200, body: body}} ->
-        {:ok, body}
+        {:ok, Poison.decode!(body)}
+
       {:ok, %{body: body, status_code: _}} ->
         {:error, body}
+
       {:error, %{reason: reason}} ->
         {:error, reason}
     end
