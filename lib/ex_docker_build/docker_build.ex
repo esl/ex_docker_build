@@ -123,8 +123,17 @@ defmodule ExDockerBuild.DockerBuild do
   # defp exec({"LABEL", args}, context, _path) do
   # end
 
-  # defp exec({"EXPOSE", args}, context, _path) do
-  # end
+  defp exec({"EXPOSE", args}, context, _path) do
+    args =
+      if not String.contains?(args, "/") do
+        args <> "/tcp"
+      else
+        args
+      end
+
+    Map.merge(context, %{"ExposedPorts" => %{"#{args}" => %{}}})
+    |> ExDockerBuild.create_layer()
+  end
 
   # defp exec({"ARG", args}, context, _path) do
   # end

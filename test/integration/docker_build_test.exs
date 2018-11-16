@@ -119,4 +119,45 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 1/1 : FROM alpine:latest"
     end
   end
+
+  describe "container listens on the specified network ports" do
+    test "expose assume tcp port 80 as default value" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"EXPOSE", "80"}
+      ]
+
+      _log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, container_id} == ExDockerBuild.start_container(container_id)
+          assert {:ok, container_id} == ExDockerBuild.stop_container(container_id)
+          assert {:ok, body} = ExDockerBuild.container_inspect(container_id, false)
+          assert %{"Config" => %{"ExposedPorts" => %{"80/tcp" => %{}}}} = body
+          assert :ok = ExDockerBuild.remove_container(container_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+        end)
+    end
+
+    test "defining tcp and udp ports" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"EXPOSE", "80/tcp"},
+        {"EXPOSE", "88/udp"}
+      ]
+
+      _log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, container_id} == ExDockerBuild.start_container(container_id)
+          assert {:ok, container_id} == ExDockerBuild.stop_container(container_id)
+          assert {:ok, body} = ExDockerBuild.container_inspect(container_id, false)
+          assert %{"Config" => %{"ExposedPorts" => %{"80/tcp" => %{}, "88/udp" => %{}}}} = body
+          assert :ok = ExDockerBuild.remove_container(container_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+        end)
+    end
+  end
 end

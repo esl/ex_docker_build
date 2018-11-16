@@ -251,4 +251,20 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec container_inspect(Docker.container_id(), boolean()) :: {:ok, any()} | {:error, any()}
+  def container_inspect(container_id, size) do
+    Logger.info("inspecting container by container id #{container_id}")
+
+    case DockerRemoteAPI.container_inspect(container_id, size) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body)}
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
 end
