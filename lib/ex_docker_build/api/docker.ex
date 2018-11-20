@@ -38,4 +38,7 @@ defmodule ExDockerBuild.API.Docker do
               {:ok, Response.t()} | {:error, Error.t()}
   @callback container_inspect(container_id(), boolean()) ::
               {:ok, Response.t()} | {:error, Error.t()}
+  @callback get_archive(container_id(), String.t()) :: {:ok, Response.t()} | {:error, Error.t()}
+  @callback extract_archive(container_id(), String.t(), String.t(), docker_credentials()) ::
+              {:ok, Response.t()} | {:error, Error.t()}
 end
