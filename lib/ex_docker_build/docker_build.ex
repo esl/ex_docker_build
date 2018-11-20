@@ -86,19 +86,18 @@ defmodule ExDockerBuild.DockerBuild do
   # Add support for ["src", "dest"] (paths with whitespaces)
   # Add support for multiple src
   defp exec({"COPY", args}, context, path) do
-    {_flags, [origin, dest]} = parse_copy_args(args)
-    absolute_origin = [path, origin] |> Path.join() |> Path.expand()
+    {flags, [origin, dest]} = parse_copy_args(args)
 
-    with {:ok, container_id} <- ExDockerBuild.create_container(context),
-         {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
-         {:ok, ^container_id} <- ExDockerBuild.upload_file(container_id, absolute_origin, dest),
-         {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
-         {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
-         :ok <- ExDockerBuild.remove_container(container_id) do
-      {:ok, new_image_id}
-    else
-      {:error, _} = error ->
-        error
+    Enum.find(flags, fn {flag, value} ->
+      if flag == "from", do: value
+    end)
+    |> case do
+      nil ->
+        absolute_origin = [path, origin] |> Path.join() |> Path.expand()
+        copy_from_file_system(absolute_origin, dest, context)
+
+      {_from, name} ->
+        copy_from_other_container(name, origin, dest, context)
     end
   end
 
@@ -195,6 +194,31 @@ defmodule ExDockerBuild.DockerBuild do
     case Poison.decode(args) do
       {:error, _error} -> {:shell_form, args}
       {:ok, value} -> {:exec_form, value}
+    end
+  end
+
+  # TODO:
+  defp copy_from_other_container(name, origin, dest, context) do
+    # with true do
+    #   :ok
+    # else
+    #   {:error, _} = error ->
+    #     error
+    # end
+    {:error, :not_implemented}
+  end
+
+  defp copy_from_file_system(origin, dest, context) do
+    with {:ok, container_id} <- ExDockerBuild.create_container(context),
+         {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+         {:ok, ^container_id} <- ExDockerBuild.upload_file(container_id, origin, dest),
+         {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
+         {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+         :ok <- ExDockerBuild.remove_container(container_id) do
+      {:ok, new_image_id}
+    else
+      {:error, _} = error ->
+        error
     end
   end
 
