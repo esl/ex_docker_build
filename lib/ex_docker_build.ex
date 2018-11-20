@@ -267,4 +267,26 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec copy_layer(
+          Docker.container_id(),
+          Docker.container_id(),
+          String.t(),
+          Docker.docker_credentials()
+        ) :: {:ok, any()} | {:error, any()}
+  def copy_layer(container_id_src, container_id_dst, path, credentials) do
+    case DockerRemoteApi.get_archive(container_id_src, path) do
+      {:ok, %{status_code: 200}} ->
+        case DockerRemoteApi.extract_archive(container_id_dst, path, false, credentials) do
+          {:ok, %{status_code: 200}} ->
+            {:ok, 200}
+
+          {:error, %{reason: reason}} ->
+            {:error, reason}
+        end
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
 end
