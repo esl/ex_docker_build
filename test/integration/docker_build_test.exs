@@ -6,10 +6,10 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
   @moduletag :integration
 
-  describe "bind mount host dir into container" do
-    @cwd System.cwd!()
-    @file_path Path.join([@cwd, "myfile.txt"])
+  @cwd System.cwd!()
+  @file_path Path.join([@cwd, "myfile.txt"])
 
+  describe "bind mount host dir into container" do
     setup do
       on_exit(fn ->
         File.rm_rf!(@file_path)
@@ -158,6 +158,34 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert :ok = ExDockerBuild.remove_container(container_id)
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
+    end
+  end
+
+  describe "copying files to a container" do
+    setup do
+      File.write!(@file_path, "This is a copying test.")
+
+      on_exit(fn ->
+        File.rm_rf!(@file_path)
+        File.rm_rf!(@file_path <> ".tar")
+      end)
+    end
+
+    test "copying files from filesystem to a container" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"COPY", "#{@file_path} ."}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "/")
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+          # there's no way to assert on containers filesystem automatically so
+          # manual checks must be done
+        end)
+
+      assert log =~ "STEP 2/2 : COPY #{@file_path} ."
     end
   end
 end

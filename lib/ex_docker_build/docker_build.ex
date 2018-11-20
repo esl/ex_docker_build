@@ -2,6 +2,7 @@ defmodule ExDockerBuild.DockerBuild do
   require Logger
 
   @env ~r/^\s*(\w+)[\s=]+(.*)$/
+  @flag ~r/^\s*--(\w+)[\s=]+(.*)$$/
 
   alias ExDockerBuild.Utils.Map, as: MapUtils
   alias ExDockerBuild.API.Docker
@@ -69,14 +70,23 @@ defmodule ExDockerBuild.DockerBuild do
         [as, container_name] when as in ["AS", "as"] -> container_name
       end
 
-    ExDockerBuild.pull(base_image)
+    new_context = Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
 
-    Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
-    |> ExDockerBuild.create_layer()
+    with :ok <- ExDockerBuild.pull(base_image),
+         {:ok, new_image_id} <- ExDockerBuild.create_layer(new_context) do
+      %{new_context | "Image" => new_image_id}
+    else
+      {:error, _} = error ->
+        error
+    end
   end
 
+  # TODO:
+  # Add support for --chown
+  # Add support for ["src", "dest"] (paths with whitespaces)
+  # Add support for multiple src
   defp exec({"COPY", args}, context, path) do
-    [origin, dest] = String.split(args, " ")
+    {_flags, [origin, dest]} = parse_copy_args(args)
     absolute_origin = [path, origin] |> Path.join() |> Path.expand()
 
     with {:ok, container_id} <- ExDockerBuild.create_container(context),
@@ -186,5 +196,22 @@ defmodule ExDockerBuild.DockerBuild do
       {:error, _error} -> {:shell_form, args}
       {:ok, value} -> {:exec_form, value}
     end
+  end
+
+  defp parse_copy_args(args) do
+    {flags, paths} =
+      args
+      |> String.split(" ")
+      |> Enum.reduce({[], []}, fn arg, {flags, paths} ->
+        case Regex.run(@flag, arg, capture: :all_but_first) do
+          nil ->
+            {flags, [arg | paths]}
+
+          [flag, value] ->
+            {[{flag, value}, flags], paths}
+        end
+      end)
+
+    {flags, Enum.reverse(paths)}
   end
 end
