@@ -268,22 +268,13 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec copy_layer(
-          Docker.container_id(),
-          Docker.container_id(),
-          String.t(),
-          Docker.docker_credentials()
-        ) :: {:ok, any()} | {:error, any()}
-  def copy_layer(container_id_src, container_id_dst, path, credentials) do
-    case DockerRemoteApi.get_archive(container_id_src, path) do
-      {:ok, %{status_code: 200}} ->
-        case DockerRemoteApi.extract_archive(container_id_dst, path, false, credentials) do
-          {:ok, %{status_code: 200}} ->
-            {:ok, 200}
+  @spec get_archive(Docker.container_id(), String.t()) :: {:ok, 200} | {:error, any()}
+  def get_archive(container_id, path) do
+    Logger.info("getting archive from container id #{container_id}")
 
-          {:error, %{reason: reason}} ->
-            {:error, reason}
-        end
+    case DockerRemoteAPI.get_archive(container_id, path) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, 200}
 
       {:error, %{reason: reason}} ->
         {:error, reason}

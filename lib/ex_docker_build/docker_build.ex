@@ -198,14 +198,13 @@ defmodule ExDockerBuild.DockerBuild do
   end
 
   # TODO:
-  defp copy_from_other_container(name, origin, dest, context) do
-    # with true do
-    #   :ok
-    # else
-    #   {:error, _} = error ->
-    #     error
-    # end
-    {:error, :not_implemented}
+  defp copy_from_other_container(name, origin, _dest, _context) do
+    with {:ok, 200} <- ExDockerBuild.copy_layer(name, origin) do
+      {:ok, :copied}
+    else
+      {:error, _} = error ->
+        error
+    end
   end
 
   defp copy_from_file_system(origin, dest, context) do
