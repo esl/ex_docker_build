@@ -168,7 +168,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       on_exit(fn ->
         File.rm_rf!(@file_path)
         File.rm_rf!(@file_path <> ".tar")
-        File.rm_rf!("./mytar.tar")
+        Path.wildcard("*.tar") |> Enum.map(&File.rm!/1)
         File.rm_rf("archive/myfile.txt")
       end)
     end
