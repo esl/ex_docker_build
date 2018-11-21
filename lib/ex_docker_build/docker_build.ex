@@ -197,9 +197,8 @@ defmodule ExDockerBuild.DockerBuild do
     end
   end
 
-  # TODO:
   defp copy_from_other_container(name, origin, _dest, _context) do
-    with {:ok, 200} <- ExDockerBuild.copy_layer(name, origin) do
+    with {:ok, 200} <- ExDockerBuild.get_archive(name, origin) do
       {:ok, :copied}
     else
       {:error, _} = error ->
