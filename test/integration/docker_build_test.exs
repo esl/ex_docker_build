@@ -181,7 +181,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "/")
           assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
-          assert {:ok, 200} = ExDockerBuild.get_archive(container_id, "/home/workspace/myfile.txt")
+          assert {:ok, 200} = ExDockerBuild.get_archive(container_id, "myfile.txt")
           assert :ok = ExDockerBuild.delete_image(image_id, true)
           # there's no way to assert on containers filesystem automatically so
           # manual checks must be done
