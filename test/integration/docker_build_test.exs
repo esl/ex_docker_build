@@ -190,7 +190,6 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
-      System.cmd("ls", [])
       assert log =~ "STEP 2/2 : COPY #{@file_path} ."
       assert File.exists?("./mytar.tar")
       assert :ok = :erl_tar.extract("./mytar.tar", [{:cwd, "./archive"}])
