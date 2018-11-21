@@ -231,7 +231,7 @@ defmodule ExDockerBuild.DockerBuild do
             {flags, [arg | paths]}
 
           [flag, value] ->
-            {[{flag, value}, flags], paths}
+            {[{flag, value} | flags], paths}
         end
       end)
 
