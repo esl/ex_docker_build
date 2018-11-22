@@ -208,7 +208,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
           assert {:ok, archive} = ExDockerBuild.get_archive(container_id, "myfile.txt")
           assert :ok = ExDockerBuild.remove_container(container_id)
-          # assert :ok = ExDockerBuild.delete_image(image_id, true)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
           assert byte_size(archive) > 0
           File.write!("./mycopytar.tar", archive)
           assert :ok = :erl_tar.extract("./mycopytar.tar")
