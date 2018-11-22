@@ -179,4 +179,13 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.get()
   end
+
+  @impl Docker
+  def get_archive(container_id, path) do
+    "#{@url}/containers/#{container_id}/archive"
+    |> URI.parse()
+    |> Map.put(:query, URI.encode_query(%{"path" => path}))
+    |> URI.to_string()
+    |> HTTPoison.get()
+  end
 end

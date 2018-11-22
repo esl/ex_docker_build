@@ -267,4 +267,17 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec get_archive(Docker.container_id(), String.t()) :: {:ok, any()} | {:error, any()}
+  def get_archive(container_id, path) do
+    Logger.info("getting archive from container id #{container_id}")
+
+    case DockerRemoteAPI.get_archive(container_id, path) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
 end
