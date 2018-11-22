@@ -6,10 +6,10 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
   @moduletag :integration
 
-  describe "bind mount host dir into container" do
-    @cwd System.cwd!()
-    @file_path Path.join([@cwd, "myfile.txt"])
+  @cwd System.cwd!()
+  @file_path Path.join([@cwd, "myfile.txt"])
 
+  describe "bind mount host dir into container" do
     setup do
       on_exit(fn ->
         File.rm_rf!(@file_path)
@@ -158,6 +158,64 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert :ok = ExDockerBuild.remove_container(container_id)
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
+    end
+  end
+
+  describe "copying files to a container" do
+    setup do
+      File.write!(@file_path, "This is a copying test.")
+
+      on_exit(fn ->
+        File.rm_rf!(@file_path)
+        Path.wildcard("*.tar") |> Enum.map(&File.rm!/1)
+        File.rm_rf!("archive")
+      end)
+    end
+
+    test "copying files from filesystem to a container" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"COPY", "#{@file_path} ."}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "/")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, archive} = ExDockerBuild.get_archive(container_id, "myfile.txt")
+          assert byte_size(archive) > 0
+          File.write!("./mytar.tar", archive)
+          assert :ok = ExDockerBuild.remove_container(container_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+        end)
+
+      assert log =~ "STEP 2/2 : COPY #{@file_path} ."
+      assert :ok = :erl_tar.extract("./mytar.tar", [{:cwd, "./archive"}])
+      assert File.read!("archive/myfile.txt") == "This is a copying test."
+    end
+
+    test "copying files from one container to another" do
+      instructions = [
+        {"FROM", "alpine:latest as copy"},
+        {"COPY", "#{@file_path} ."},
+        {"FROM", "alpine:latest"},
+        {"COPY", "--from=copy /myfile.txt ."}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "/")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, archive} = ExDockerBuild.get_archive(container_id, "myfile.txt")
+          assert :ok = ExDockerBuild.remove_container(container_id)
+          assert :ok = ExDockerBuild.delete_image(image_id, true)
+          assert byte_size(archive) > 0
+          File.write!("./mycopytar.tar", archive)
+          assert :ok = :erl_tar.extract("./mycopytar.tar")
+          assert File.read!("myfile.txt") == "This is a copying test."
+        end)
+
+      assert log =~ "STEP 4/4 : COPY --from=copy /myfile.txt ."
     end
   end
 end

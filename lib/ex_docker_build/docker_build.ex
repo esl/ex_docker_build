@@ -2,6 +2,7 @@ defmodule ExDockerBuild.DockerBuild do
   require Logger
 
   @env ~r/^\s*(\w+)[\s=]+(.*)$/
+  @flag ~r/^\s*--(\w+)[\s=]+(.*)$$/
 
   alias ExDockerBuild.Utils.Map, as: MapUtils
   alias ExDockerBuild.API.Docker
@@ -69,26 +70,50 @@ defmodule ExDockerBuild.DockerBuild do
         [as, container_name] when as in ["AS", "as"] -> container_name
       end
 
-    ExDockerBuild.pull(base_image)
+    new_context =
+      case context do
+        %{"ContainerName" => prev_name, "Image" => prev_image} ->
+          Map.merge(context, %{
+            "Image" => base_image,
+            "ContainerName" => name,
+            "PrevContainerName" => prev_name,
+            "PrevImage" => prev_image
+          })
 
-    Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
-    |> ExDockerBuild.create_layer()
-  end
+        _ ->
+          if name == "" do
+            Map.merge(context, %{"Image" => base_image})
+          else
+            Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
+          end
+      end
 
-  defp exec({"COPY", args}, context, path) do
-    [origin, dest] = String.split(args, " ")
-    absolute_origin = [path, origin] |> Path.join() |> Path.expand()
-
-    with {:ok, container_id} <- ExDockerBuild.create_container(context),
-         {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
-         {:ok, ^container_id} <- ExDockerBuild.upload_file(container_id, absolute_origin, dest),
-         {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
-         {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
-         :ok <- ExDockerBuild.remove_container(container_id) do
-      {:ok, new_image_id}
+    with :ok <- ExDockerBuild.pull(base_image),
+         {:ok, new_image_id} <- ExDockerBuild.create_layer(new_context) do
+      %{new_context | "Image" => new_image_id}
     else
       {:error, _} = error ->
         error
+    end
+  end
+
+  # TODO:
+  # Add support for --chown
+  # Add support for ["src", "dest"] (paths with whitespaces)
+  # Add support for multiple src
+  defp exec({"COPY", args}, context, path) do
+    {flags, [origin, dest]} = parse_copy_args(args)
+
+    Enum.find(flags, fn {flag, value} ->
+      if flag == "from", do: value
+    end)
+    |> case do
+      nil ->
+        absolute_origin = [path, origin] |> Path.join() |> Path.expand()
+        copy_from_file_system(absolute_origin, dest, context)
+
+      {_from, name} ->
+        copy_from_other_container(name, origin, dest, context)
     end
   end
 
@@ -185,6 +210,75 @@ defmodule ExDockerBuild.DockerBuild do
     case Poison.decode(args) do
       {:error, _error} -> {:shell_form, args}
       {:ok, value} -> {:exec_form, value}
+    end
+  end
+
+  defp copy_from_other_container(name, origin, dest, context) do
+    start_origin_container(context, fn ->
+      with {:ok, archive} <- ExDockerBuild.get_archive(name, origin),
+           {:ok, container_id} <- ExDockerBuild.create_container(context),
+           {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+           {:ok, ^container_id} <- ExDockerBuild.upload_archive(container_id, archive, dest),
+           {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
+           {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+           :ok <- ExDockerBuild.remove_container(container_id) do
+        {:ok, new_image_id}
+      else
+        {:error, _} = error ->
+          error
+      end
+    end)
+  end
+
+  defp copy_from_file_system(origin, dest, context) do
+    with {:ok, container_id} <- ExDockerBuild.create_container(context),
+         {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+         {:ok, ^container_id} <- ExDockerBuild.upload_file(container_id, origin, dest),
+         {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
+         {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+         :ok <- ExDockerBuild.remove_container(container_id) do
+      {:ok, new_image_id}
+    else
+      {:error, _} = error ->
+        error
+    end
+  end
+
+  defp parse_copy_args(args) do
+    {flags, paths} =
+      args
+      |> String.split(" ")
+      |> Enum.reduce({[], []}, fn arg, {flags, paths} ->
+        case Regex.run(@flag, arg, capture: :all_but_first) do
+          nil ->
+            {flags, [arg | paths]}
+
+          [flag, value] ->
+            {[{flag, value} | flags], paths}
+        end
+      end)
+
+    {flags, Enum.reverse(paths)}
+  end
+
+  defp start_origin_container(context, fun) do
+    case context do
+      %{"PrevContainerName" => prev_name, "PrevImage" => prev_image} ->
+        temp_context = Map.merge(context, %{"Image" => prev_image, "ContainerName" => prev_name})
+
+        with {:ok, container_id} <- ExDockerBuild.create_container(temp_context),
+             {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+             {:ok, image_id} <- fun.(),
+             {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+             :ok <- ExDockerBuild.remove_container(container_id) do
+          {:ok, image_id}
+        else
+          {:error, _} = error ->
+            error
+        end
+
+      _ ->
+        fun.()
     end
   end
 end

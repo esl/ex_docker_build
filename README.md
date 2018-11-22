@@ -48,6 +48,21 @@ path = Path.expand("~/workspace/elixir-docker-guide")
   ExDockerBuild.DockerBuild.build(path)
 ```
 
+Or you can start using escript:
+
+```ex
+mix escript.build
+Generated escript ex_docker_build 
+```
+
+Then call the escript passing the path to a Dockerfile
+
+```ex
+./ex_docker_build ~/workspace/elixir-docker-guide/Dockerfile
+
+[info]  image created d44264c48dad
+```
+
 Copy the image_id into your clipboard and run the image with docker like this
 
 ```sh

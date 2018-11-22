@@ -146,22 +146,28 @@ defmodule ExDockerBuild do
         archive_payload = File.read!(final_path)
 
         try do
-          case DockerRemoteAPI.upload_file(container_id, archive_payload, output_path) do
-            {:ok, %{status_code: 200}} ->
-              {:ok, container_id}
-
-            {:ok, %{body: body, status_code: _}} ->
-              {:error, body}
-
-            {:error, %{reason: reason}} ->
-              {:error, reason}
-          end
+          upload_archive(container_id, archive_payload, output_path)
         after
           File.rm!(final_path)
         end
 
       {:error, _} = error ->
         error
+    end
+  end
+
+  @spec upload_archive(Docker.container_id(), String.t(), Path.t()) ::
+          {:ok, Docker.container_id()} | {:error, any()} | no_return()
+  def upload_archive(container_id, archive_payload, output_path) do
+    case DockerRemoteAPI.upload_file(container_id, archive_payload, output_path) do
+      {:ok, %{status_code: 200}} ->
+        {:ok, container_id}
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
     end
   end
 
@@ -259,6 +265,22 @@ defmodule ExDockerBuild do
     case DockerRemoteAPI.container_inspect(container_id, size) do
       {:ok, %{status_code: 200, body: body}} ->
         {:ok, Poison.decode!(body)}
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec get_archive(Docker.container_id(), String.t()) :: {:ok, any()} | {:error, any()}
+  def get_archive(container_id, path) do
+    Logger.info("getting archive from container id #{container_id}")
+
+    case DockerRemoteAPI.get_archive(container_id, path) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, body}
 
       {:ok, %{body: body, status_code: _}} ->
         {:error, body}
