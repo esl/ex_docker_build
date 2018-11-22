@@ -58,7 +58,7 @@ Generated escript ex_docker_build
 Then call the escript passing the path to a Dockerfile
 
 ```ex
-./ex_docker_build ~/workspace/elixir-docker-guide
+./ex_docker_build ~/workspace/elixir-docker-guide/Dockerfile
 
 [info]  image created d44264c48dad
 ```
