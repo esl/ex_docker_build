@@ -70,7 +70,23 @@ defmodule ExDockerBuild.DockerBuild do
         [as, container_name] when as in ["AS", "as"] -> container_name
       end
 
-    new_context = Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
+    new_context =
+      case context do
+        %{"ContainerName" => prev_name, "Image" => prev_image} ->
+          Map.merge(context, %{
+            "Image" => base_image,
+            "ContainerName" => name,
+            "PrevContainerName" => prev_name,
+            "PrevImage" => prev_image
+          })
+
+        _ ->
+          if name == "" do
+            Map.merge(context, %{"Image" => base_image})
+          else
+            Map.merge(context, %{"Image" => base_image, "ContainerName" => name})
+          end
+      end
 
     with :ok <- ExDockerBuild.pull(base_image),
          {:ok, new_image_id} <- ExDockerBuild.create_layer(new_context) do
@@ -197,13 +213,21 @@ defmodule ExDockerBuild.DockerBuild do
     end
   end
 
-  defp copy_from_other_container(name, origin, _dest, _context) do
-    with {:ok, 200} <- ExDockerBuild.get_archive(name, origin) do
-      {:ok, :copied}
-    else
-      {:error, _} = error ->
-        error
-    end
+  defp copy_from_other_container(name, origin, dest, context) do
+    start_origin_container(context, fn ->
+      with {:ok, archive} <- ExDockerBuild.get_archive(name, origin),
+           {:ok, container_id} <- ExDockerBuild.create_container(context),
+           {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+           {:ok, ^container_id} <- ExDockerBuild.upload_archive(container_id, archive, dest),
+           {:ok, new_image_id} <- ExDockerBuild.commit(container_id, %{}),
+           {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+           :ok <- ExDockerBuild.remove_container(container_id) do
+        {:ok, new_image_id}
+      else
+        {:error, _} = error ->
+          error
+      end
+    end)
   end
 
   defp copy_from_file_system(origin, dest, context) do
@@ -235,5 +259,26 @@ defmodule ExDockerBuild.DockerBuild do
       end)
 
     {flags, Enum.reverse(paths)}
+  end
+
+  defp start_origin_container(context, fun) do
+    case context do
+      %{"PrevContainerName" => prev_name, "PrevImage" => prev_image} ->
+        temp_context = Map.merge(context, %{"Image" => prev_image, "ContainerName" => prev_name})
+
+        with {:ok, container_id} <- ExDockerBuild.create_container(temp_context),
+             {:ok, ^container_id} <- ExDockerBuild.start_container(container_id),
+             {:ok, image_id} <- fun.(),
+             {:ok, ^container_id} <- ExDockerBuild.stop_container(container_id),
+             :ok <- ExDockerBuild.remove_container(container_id) do
+          {:ok, image_id}
+        else
+          {:error, _} = error ->
+            error
+        end
+
+      _ ->
+        fun.()
+    end
   end
 end
