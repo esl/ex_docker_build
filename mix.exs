@@ -17,7 +17,8 @@ defmodule ExDockerBuild.MixProject do
       ],
       dialyzer: [flags: [:error_handling, :race_conditions, :underspecs]],
       package: package(),
-      description: description()
+      description: description(),
+      escript: [main_module: ExDockerBuild.CLI]
     ]
   end
 
