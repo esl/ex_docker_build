@@ -188,16 +188,4 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.get()
   end
-
-  @impl Docker
-  def extract_archive(container_id, path, noOverwriteDirNonDir) do
-    "#{@url}/containers/#{container_id}/archive"
-    |> URI.parse()
-    |> Map.put(
-      :query,
-      URI.encode_query(%{"path" => path, "noOverwriteDirNonDir" => noOverwriteDirNonDir})
-    )
-    |> URI.to_string()
-    |> HTTPoison.post("", [])
-  end
 end

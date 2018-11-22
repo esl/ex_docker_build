@@ -168,6 +168,8 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       on_exit(fn ->
         File.rm_rf!(@file_path)
         File.rm_rf!(@file_path <> ".tar")
+        Path.wildcard("*.tar") |> Enum.map(&File.rm!/1)
+        File.rm_rf("archive/myfile.txt")
       end)
     end
 
@@ -180,12 +182,18 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       log =
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "/")
+          assert {:ok, container_id} = ExDockerBuild.create_container(%{"Image" => image_id})
+          assert {:ok, archive} = ExDockerBuild.get_archive(container_id, "myfile.txt")
+          assert byte_size(archive) > 0
+          File.write!("./mytar.tar", archive)
+          assert :ok = ExDockerBuild.remove_container(container_id)
           assert :ok = ExDockerBuild.delete_image(image_id, true)
-          # there's no way to assert on containers filesystem automatically so
-          # manual checks must be done
         end)
 
       assert log =~ "STEP 2/2 : COPY #{@file_path} ."
+      assert File.exists?("./mytar.tar")
+      assert :ok = :erl_tar.extract("./mytar.tar", [{:cwd, "./archive"}])
+      assert File.read!("archive/myfile.txt") == "This is a copying test."
     end
   end
 end
