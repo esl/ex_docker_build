@@ -247,7 +247,7 @@ defmodule ExDockerBuild.DockerBuild do
   defp parse_copy_args(args) do
     {flags, paths} =
       args
-      |> String.split(" ")
+      |> String.split()
       |> Enum.reduce({[], []}, fn arg, {flags, paths} ->
         case Regex.run(@flag, arg, capture: :all_but_first) do
           nil ->
