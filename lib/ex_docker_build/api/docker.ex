@@ -34,7 +34,7 @@ defmodule ExDockerBuild.API.Docker do
   @callback create_volume(map()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback push_image(image_id(), String.t(), docker_credentials()) ::
               {:ok, Response.t()} | {:error, Error.t()}
-  @callback tag_image(image_id(), repository_name(), tag_name(), docker_credentials()) ::
+  @callback tag_image(image_id(), repository_name(), tag_name()) ::
               {:ok, Response.t()} | {:error, Error.t()}
   @callback container_inspect(container_id(), boolean()) ::
               {:ok, Response.t()} | {:error, Error.t()}
