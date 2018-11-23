@@ -225,7 +225,7 @@ defmodule ExDockerBuild do
   @spec push_image(Docker.image_id(), Docker.tag_name(), Docker.docker_credentials()) ::
           :ok | {:error, any()}
   def push_image(image, tag_name, credentials) do
-    Logger.info("pushing image id #{image} to docker registry")
+    Logger.info("pushing image id #{image} tag #{tag_name} to docker registry")
 
     case DockerRemoteAPI.push_image(image, tag_name, credentials) do
       {:ok, %{status_code: 200}} ->
@@ -242,11 +242,10 @@ defmodule ExDockerBuild do
   @spec tag_image(
           Docker.image_id(),
           Docker.repository_name(),
-          Docker.tag_name(),
-          Docker.docker_credentials()
+          Docker.tag_name()
         ) :: :ok | {:error, any()}
-  def tag_image(image, repo_name, tag_name, credentials) do
-    case DockerRemoteAPI.tag_image(image, repo_name, tag_name, credentials) do
+  def tag_image(image, repo_name, tag_name) do
+    case DockerRemoteAPI.tag_image(image, repo_name, tag_name) do
       {:ok, %{status_code: 201}} ->
         :ok
 

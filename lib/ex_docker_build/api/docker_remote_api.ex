@@ -149,26 +149,12 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   end
 
   @impl Docker
-  def tag_image(image_id, repo, tag, %{
-        docker_username: docker_username,
-        docker_password: docker_password,
-        docker_servername: docker_servername
-      }) do
-    docker_credentials = %{
-      "username" => docker_username,
-      "password" => docker_password,
-      "servername" => docker_servername
-    }
-
-    header =
-      Poison.encode!(docker_credentials)
-      |> Base.encode64()
-
+  def tag_image(image_id, repo, tag) do
     "#{@url}/images/#{image_id}/tag"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"repo" => repo, "tag" => tag}))
     |> URI.to_string()
-    |> HTTPoison.post("", [{"X-Registry-Auth", header}])
+    |> HTTPoison.post("")
   end
 
   @impl Docker

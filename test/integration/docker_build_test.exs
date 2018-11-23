@@ -108,12 +108,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
 
-          assert :ok =
-                   ExDockerBuild.tag_image(image_id, "fake/fake_testci", "v1.0.0", %{
-                     docker_username: "",
-                     docker_password: "",
-                     docker_servername: ""
-                   })
+          assert :ok = ExDockerBuild.tag_image(image_id, "fake/fake_testci", "v1.0.0")
         end)
 
       assert log =~ "STEP 1/1 : FROM alpine:latest"
