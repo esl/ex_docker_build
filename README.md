@@ -16,7 +16,7 @@ by adding `ex_docker_build` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_docker_build, "~> 0.4.0"}
+    {:ex_docker_build, "~> 0.5.0"}
   ]
 end
 ```
@@ -52,7 +52,7 @@ Or you can start using escript:
 
 ```ex
 mix escript.build
-Generated escript ex_docker_build 
+Generated escript ex_docker_build
 ```
 
 Then call the escript passing the path to a Dockerfile
