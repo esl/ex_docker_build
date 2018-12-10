@@ -160,8 +160,12 @@ defmodule ExDockerBuild.DockerBuild do
     |> ExDockerBuild.create_layer()
   end
 
-  # defp exec({"ARG", args}, context, _path) do
-  # end
+  defp exec({"ARG", args}, context, _path) do
+    args = String.split(args, "=")
+
+    Map.merge(context, %{"Args" => Enum.at(args, 2)})
+    |> ExDockerBuild.create_layer()
+  end
 
   # Supports:
   # VOLUME volume_name for named volumes
