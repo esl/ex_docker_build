@@ -273,6 +273,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
         end)
+
       assert log =~ "STEP 1/4 : FROM alpine:latest"
       assert log =~ "pulling image alpine:latest"
       assert log =~ "STEP 2/4 : ARG tag=\"latest\""
@@ -294,6 +295,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         capture_log(fn ->
           assert {:ok, image_id} = DockerBuild.build(instructions, "")
         end)
+
       assert log =~ "STEP 1/6 : FROM alpine:latest"
       assert log =~ "pulling image alpine:latest"
       assert log =~ "STEP 2/6 : ARG tag=\"latest\""
