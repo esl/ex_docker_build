@@ -288,4 +288,63 @@ defmodule ExDockerBuild do
         {:error, reason}
     end
   end
+
+  @spec image_history(Docker.image_id()) :: {:ok, any()} | {:error, any()}
+  def image_history(image_id) do
+    Logger.info("getting history for image id #{image_id}")
+
+    case DockerRemoteAPI.image_history(image_id) do
+      {:ok, %{status_code: 200, body: body}} ->
+        history = body |> Poison.decode!() |> to_config_history()
+        {:ok, history}
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  defp to_config_history(history) do
+    Enum.reduce(history, [], fn record, acc ->
+      new_record =
+        Enum.reduce(record, %{}, fn
+          {"Id", _}, acc ->
+            acc
+
+          {"Size", v}, acc ->
+            if v == 0 do
+              Map.put_new(acc, "empty_layer", true)
+            else
+              acc
+            end
+
+          {"Comment", _}, acc ->
+            acc
+
+          {"Tags", _}, acc ->
+            acc
+
+          {k, v}, acc ->
+            new_key = Macro.underscore(k)
+
+            value =
+              case new_key do
+                "created" ->
+                    v
+                    |> DateTime.from_unix!()
+                    |> DateTime.to_iso8601()
+
+                _ ->
+                  v
+              end
+
+            Map.put_new(acc, new_key, value)
+        end)
+
+      [new_record | acc]
+    end)
+    |> Enum.reverse()
+  end
 end

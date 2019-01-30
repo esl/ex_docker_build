@@ -1,5 +1,5 @@
 # Latest version of Erlang-based Elixir installation: https://hub.docker.com/_/elixir/
-FROM elixir:latest
+FROM elixir:1.7.3
 
 # Create and set home directory
 WORKDIR /opt/app
