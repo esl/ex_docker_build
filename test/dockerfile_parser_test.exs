@@ -17,7 +17,7 @@ defmodule ExDockerBuild.DockerfileParserTest do
     result = parse(base_dir, "Dockerfile_simple.dockerfile")
 
     assert result == [
-             {"FROM", "elixir:latest"},
+             {"FROM", "elixir:1.7.3"},
              {"WORKDIR", "/opt/app"},
              {"ENV", "MIX_ENV prod"},
              {"RUN", "mix local.hex --force"},

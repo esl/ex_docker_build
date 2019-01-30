@@ -60,6 +60,13 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
   end
 
   describe "mount a named volume" do
+    setup do
+      on_exit(fn ->
+        volume_storage = Path.join([@cwd, "vol_storage"])
+        File.rm_rf!(volume_storage)
+      end)
+    end
+
     test "build docker image mounting a named volume" do
       instructions = [
         {"FROM", "alpine:3.8"},

@@ -332,7 +332,6 @@ defmodule ExDockerBuild do
             value =
               case new_key do
                 "created" ->
-                  datetime =
                     v
                     |> DateTime.from_unix!()
                     |> DateTime.to_iso8601()
