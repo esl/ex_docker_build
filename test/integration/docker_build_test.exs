@@ -63,7 +63,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
     setup do
       on_exit(fn ->
         volume_storage = Path.join([@cwd, "vol_storage"])
-        File.rm_rf!(volume_storage)
+        File.rm_rf(volume_storage)
       end)
     end
 
