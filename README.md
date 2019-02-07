@@ -1,6 +1,6 @@
 # Docker Build Clone using Elixir
 
-[![Build Status](https://travis-ci.org/sescobb27/ex_docker_build.svg?branch=master)](https://travis-ci.org/sescobb27/ex_docker_build)
+[![Build Status](https://travis-ci.org/esl/ex_docker_build.svg?branch=master)](https://travis-ci.org/esl/ex_docker_build)
 
 ## What's the special thing about this?
 

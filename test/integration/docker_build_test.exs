@@ -18,7 +18,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
     test "build docker image binding a mount at build time" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"VOLUME", @cwd <> ":/data"},
         {"RUN", "echo \"hello-world!!!!\" > /data/myfile.txt"},
         {"CMD", "[\"cat\", \"/data/myfile.txt\"]"}
@@ -30,8 +30,8 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
-      assert log =~ "STEP 1/4 : FROM alpine:latest"
-      assert log =~ "pulling image alpine:latest"
+      assert log =~ "STEP 1/4 : FROM alpine:3.8"
+      assert log =~ "pulling image alpine:3.8"
       assert log =~ "STEP 2/4 : VOLUME #{@cwd}:/data"
       assert log =~ "STEP 3/4 : RUN echo \"hello-world!!!!\" > /data/myfile.txt"
       assert log =~ "STEP 4/4 : CMD [\"cat\", \"/data/myfile.txt\"]"
@@ -41,7 +41,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
     test "build docker image relative binding a mount at build time" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"VOLUME", ".:/data"},
         {"RUN", "echo \"hello-relative-world!!!!\" > /data/myfile.txt"},
         {"CMD", "[\"cat\", \"/data/myfile.txt\"]"}
@@ -60,17 +60,16 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
   end
 
   describe "mount a named volume" do
-
     setup do
       on_exit(fn ->
-        local_file_path = Path.join([@cwd, "vol_storage", "greeting"])
-        File.rm_rf!(local_file_path)
+        volume_storage = Path.join([@cwd, "vol_storage"])
+        File.rm_rf(volume_storage)
       end)
     end
 
     test "build docker image mounting a named volume" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"RUN", "mkdir /myvol"},
         {"RUN", "echo \"hello-world!!!!\" > /myvol/greeting"},
         {"VOLUME", "vol_storage"},
@@ -93,12 +92,12 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
               assert error == nil, "should not be an error"
           end
 
-          assert :ok = ExDockerBuild.delete_volume("vol_storage")
           assert :ok = ExDockerBuild.delete_image(image_id, true)
+          assert :ok = ExDockerBuild.delete_volume("vol_storage")
         end)
 
-      assert log =~ "STEP 1/6 : FROM alpine:latest"
-      assert log =~ "pulling image alpine:latest"
+      assert log =~ "STEP 1/6 : FROM alpine:3.8"
+      assert log =~ "pulling image alpine:3.8"
       assert log =~ "STEP 2/6 : RUN mkdir /myvol"
       assert log =~ "STEP 3/6 : RUN echo \"hello-world!!!!\" > /myvol/greeting"
       assert log =~ "STEP 4/6 : VOLUME vol_storage"
@@ -110,7 +109,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
   describe "tagging an image" do
     test "build docker image mounting a named volume" do
       instructions = [
-        {"FROM", "alpine:latest"}
+        {"FROM", "alpine:3.8"}
       ]
 
       log =
@@ -120,14 +119,14 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           assert :ok = ExDockerBuild.tag_image(image_id, "fake/fake_testci", "v1.0.0")
         end)
 
-      assert log =~ "STEP 1/1 : FROM alpine:latest"
+      assert log =~ "STEP 1/1 : FROM alpine:3.8"
     end
   end
 
   describe "container listens on the specified network ports" do
     test "expose assume tcp port 80 as default value" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"EXPOSE", "80"}
       ]
 
@@ -146,7 +145,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
     test "defining tcp and udp ports" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"EXPOSE", "80/tcp"},
         {"EXPOSE", "88/udp"}
       ]
@@ -178,7 +177,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
     test "copying files from filesystem to a container" do
       instructions = [
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"COPY", "#{@file_path} ."}
       ]
 
@@ -200,9 +199,9 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
     test "copying files from one container to another" do
       instructions = [
-        {"FROM", "alpine:latest as copy"},
+        {"FROM", "alpine:3.8 as copy"},
         {"COPY", "#{@file_path} ."},
-        {"FROM", "alpine:latest"},
+        {"FROM", "alpine:3.8"},
         {"COPY", "--from=copy /myfile.txt ."}
       ]
 
@@ -220,6 +219,14 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         end)
 
       assert log =~ "STEP 4/4 : COPY --from=copy /myfile.txt ."
+    end
+  end
+
+  describe "image history" do
+    @tag capture_log: true
+    test "gets image history" do
+      assert :ok = ExDockerBuild.pull("alpine:3.8")
+      assert {:ok, history} = ExDockerBuild.image_history("alpine:3.8")
     end
   end
 end

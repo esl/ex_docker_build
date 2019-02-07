@@ -192,4 +192,10 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.to_string()
     |> HTTPoison.get()
   end
+
+  @impl Docker
+  def image_history(image_id) do
+    "#{@url}/images/#{image_id}/history"
+    |> HTTPoison.get()
+  end
 end
