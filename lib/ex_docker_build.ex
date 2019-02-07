@@ -201,6 +201,39 @@ defmodule ExDockerBuild do
     end
   end
 
+  @spec inspect_volume(String.t()) :: :ok | {:error, any()}
+  def inspect_volume(volume_name) do
+    case DockerRemoteAPI.inspect_volume(volume_name) do
+      {:ok, %{status_code: 200}} ->
+        :ok
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, body}
+
+      {:error, %{reason: reason}} ->
+        {:error, reason}
+    end
+  end
+
+  @spec delete_volume(String.t()) :: :ok | {:error, any()}
+  def delete_volume(volume_name) do
+    case inspect_volume(volume_name) do
+      :ok ->
+        case DockerRemoteAPI.delete_volume(volume_name) do
+          {:ok, %{status_code: 204}} ->
+            :ok
+
+          {:ok, %{body: body, status_code: _}} ->
+            {:error, body}
+
+          {:error, %{reason: reason}} ->
+            {:error, reason}
+        end
+      {:error, reason} ->
+        {:error, reason}
+    end
+  end
+
   @spec delete_image(Docker.image_id()) :: :ok | {:error, any()}
   def delete_image(image) do
     delete_image(image, false)

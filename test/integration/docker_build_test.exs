@@ -6,7 +6,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
   @moduletag :integration
 
-  @cwd System.cwd!()
+  @cwd File.cwd!()
   @file_path Path.join([@cwd, "myfile.txt"])
 
   describe "bind mount host dir into container" do
@@ -60,6 +60,14 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
   end
 
   describe "mount a named volume" do
+
+    setup do
+      on_exit(fn ->
+        local_file_path = Path.join([@cwd, "vol_storage", "greeting"])
+        File.rm_rf!(local_file_path)
+      end)
+    end
+
     test "build docker image mounting a named volume" do
       instructions = [
         {"FROM", "alpine:latest"},
@@ -85,6 +93,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
               assert error == nil, "should not be an error"
           end
 
+          assert :ok = ExDockerBuild.delete_volume("vol_storage")
           assert :ok = ExDockerBuild.delete_image(image_id, true)
         end)
 
