@@ -228,7 +228,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert :ok = ExDockerBuild.pull("alpine:3.8")
       assert {:ok, history} = ExDockerBuild.image_history("alpine:3.8")
 
-      assert [ %{"created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]", "empty_layer" => true}, ...] = history
+      assert [%{"created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]", "empty_layer" => true}, ...] = history
     end
   end
 end
