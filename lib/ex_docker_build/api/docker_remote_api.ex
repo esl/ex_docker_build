@@ -129,18 +129,12 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   @impl Docker
   def inspect_volume(volume_name) do
     "#{@url}/volumes/#{volume_name}"
-    |> URI.parse()
-    |> Map.put(:query, URI.encode_query(%{}))
-    |> URI.to_string()
     |> HTTPoison.get()
   end
 
   @impl Docker
   def delete_volume(volume_name) do
     "#{@url}/volumes/#{volume_name}"
-    |> URI.parse()
-    |> Map.put(:query, URI.encode_query(%{}))
-    |> URI.to_string()
     |> HTTPoison.delete()
   end
 

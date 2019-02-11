@@ -105,6 +105,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 6/6 : CMD [\"cat\", \"/myvol/greeting\"]"
     end
 
+    @tag capture_log: true
     test "create and manage persistent storage as volumes that can be attached to containers" do
       volume_name = "vol_storage"
       instructions = [
@@ -113,16 +114,15 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         {"VOLUME", "vol_storage:/myvol"}
       ]
 
-      _log =
-        capture_log(fn ->
-          assert {:ok, image_id} = DockerBuild.build(instructions, "")
-        end)
+      capture_log(fn ->
+        assert {:ok, image_id} = DockerBuild.build(instructions, "")
+      end)
 
-        {:ok, body} = ExDockerBuild.get_volumes(%{"name" => volume_name})
-        assert %{"Volumes" => [%{"Name" => volume_name, "Scope" => "local"}]} = body
-        {:ok, volume_body} = ExDockerBuild.inspect_volume(volume_name)
-        assert %{"Name" => volume_name, "Scope" => "local"} = volume_body
-        assert :ok = ExDockerBuild.delete_volume(volume_name)
+      {:ok, body} = ExDockerBuild.get_volumes(%{"name" => volume_name})
+      assert %{"Volumes" => [%{"Name" => volume_name, "Scope" => "local"}]} = body
+      {:ok, volume_body} = ExDockerBuild.inspect_volume(volume_name)
+      assert %{"Name" => ^volume_name, "Scope" => "local"} = volume_body
+      assert :ok = ExDockerBuild.delete_volume(volume_name)
     end
   end
 
