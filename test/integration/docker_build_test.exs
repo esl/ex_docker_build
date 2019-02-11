@@ -6,7 +6,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
 
   @moduletag :integration
 
-  @cwd System.cwd!()
+  @cwd File.cwd!()
   @file_path Path.join([@cwd, "myfile.txt"])
 
   describe "bind mount host dir into container" do
@@ -93,6 +93,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
           end
 
           assert :ok = ExDockerBuild.delete_image(image_id, true)
+          assert :ok = ExDockerBuild.delete_volume("vol_storage")
         end)
 
       assert log =~ "STEP 1/6 : FROM alpine:3.8"
@@ -102,6 +103,26 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert log =~ "STEP 4/6 : VOLUME vol_storage"
       assert log =~ "STEP 5/6 : VOLUME vol_storage:/myvol"
       assert log =~ "STEP 6/6 : CMD [\"cat\", \"/myvol/greeting\"]"
+    end
+
+    @tag capture_log: true
+    test "create and manage persistent storage as volumes that can be attached to containers" do
+      volume_name = "vol_storage"
+      instructions = [
+        {"FROM", "alpine:3.8"},
+        {"VOLUME", volume_name},
+        {"VOLUME", "vol_storage:/myvol"}
+      ]
+
+      capture_log(fn ->
+        assert {:ok, image_id} = DockerBuild.build(instructions, "")
+      end)
+
+      {:ok, body} = ExDockerBuild.get_volumes(%{"name" => volume_name})
+      assert %{"Volumes" => [%{"Name" => volume_name, "Scope" => "local"}]} = body
+      {:ok, volume_body} = ExDockerBuild.inspect_volume(volume_name)
+      assert %{"Name" => ^volume_name, "Scope" => "local"} = volume_body
+      assert :ok = ExDockerBuild.delete_volume(volume_name)
     end
   end
 
@@ -227,18 +248,10 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert :ok = ExDockerBuild.pull("alpine:3.8")
       assert {:ok, history} = ExDockerBuild.image_history("alpine:3.8")
 
-      assert history == [
-               %{
-                 "created" => "2018-12-21T00:21:30Z",
-                 "created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
-                 "empty_layer" => true
-               },
-               %{
-                 "created" => "2018-12-21T00:21:29Z",
-                 "created_by" =>
-                   "/bin/sh -c #(nop) ADD file:2ff00caea4e83dfade726ca47e3c795a1e9acb8ac24e392785c474ecf9a621f2 in / "
-               }
-             ]
+      assert [%{"created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
+                "empty_layer" => true},
+              %{"created_by" => "/bin/sh -c #(nop) ADD file:91fb97ea3549e52e7b6e22b93a6736cf915c756f3d13348406d8ad5f1a872680 in / "}
+             ] = history
     end
   end
 end
