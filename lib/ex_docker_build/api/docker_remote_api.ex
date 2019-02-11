@@ -117,6 +117,16 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   end
 
   @impl Docker
+  def get_volumes(filters \\ %{}) do
+    filters = Poison.encode!(%{"filters" => filters})
+    "#{@url}/volumes"
+    |> URI.parse()
+    |> Map.put(:query, filters)
+    |> URI.to_string()
+    |> HTTPoison.get()
+  end
+
+  @impl Docker
   def inspect_volume(volume_name) do
     "#{@url}/volumes/#{volume_name}"
     |> URI.parse()

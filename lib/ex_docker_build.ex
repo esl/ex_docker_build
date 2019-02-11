@@ -201,11 +201,30 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec inspect_volume(String.t()) :: :ok | {:error, any()}
+  @spec get_volumes() :: {:ok, any()} | {:error, any()}
+  def get_volumes do
+    get_volumes(%{})
+  end
+
+  @spec get_volumes(map()) :: {:ok, any()} | {:error, any()}
+  def get_volumes(filters \\ %{}) do
+    case DockerRemoteAPI.get_volumes(filters) do
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body)}
+
+      {:ok, %{body: body, status_code: _}} ->
+        {:error, Poison.decode!(body)}
+
+      {:error, %{status_code: 500, message: message}} ->
+      {:error, message}
+    end
+  end
+
+  @spec inspect_volume(String.t()) :: {:ok, any()} | {:error, any()}
   def inspect_volume(volume_name) do
     case DockerRemoteAPI.inspect_volume(volume_name) do
-      {:ok, %{status_code: 200}} ->
-        :ok
+      {:ok, %{status_code: 200, body: body}} ->
+        {:ok, Poison.decode!(body)}
 
       {:ok, %{body: body, status_code: _}} ->
         {:error, body}
@@ -218,7 +237,7 @@ defmodule ExDockerBuild do
   @spec delete_volume(String.t()) :: :ok | {:error, any()}
   def delete_volume(volume_name) do
     case inspect_volume(volume_name) do
-      :ok ->
+      {:ok, _} ->
         case DockerRemoteAPI.delete_volume(volume_name) do
           {:ok, %{status_code: 204}} ->
             :ok
