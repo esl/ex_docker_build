@@ -3,7 +3,7 @@ defmodule ExDockerBuild.TarTest do
 
   alias ExDockerBuild.Tar
 
-  @cwd System.cwd!()
+  @cwd File.cwd!()
   @fixtures_path Path.join([@cwd, "test", "fixtures"])
 
   setup do

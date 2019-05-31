@@ -4,7 +4,7 @@ defmodule ExDockerBuild.DockerfileParserTest do
   alias ExDockerBuild.DockerfileParser, as: Parser
 
   setup do
-    base_dir = Path.join([System.cwd!(), "test", "fixtures"])
+    base_dir = Path.join([File.cwd!(), "test", "fixtures"])
     {:ok, base_dir: base_dir}
   end
 

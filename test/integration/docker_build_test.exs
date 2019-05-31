@@ -108,6 +108,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
     @tag capture_log: true
     test "create and manage persistent storage as volumes that can be attached to containers" do
       volume_name = "vol_storage"
+
       instructions = [
         {"FROM", "alpine:3.8"},
         {"VOLUME", volume_name},
@@ -248,10 +249,12 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert :ok = ExDockerBuild.pull("alpine:3.8")
       assert {:ok, history} = ExDockerBuild.image_history("alpine:3.8")
 
-      assert [%{"created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]",
-                "empty_layer" => true},
-              %{"created_by" => "/bin/sh -c #(nop) ADD file:91fb97ea3549e52e7b6e22b93a6736cf915c756f3d13348406d8ad5f1a872680 in / "}
+      assert [
+               %{"created_by" => "/bin/sh -c #(nop)  CMD [\"/bin/sh\"]", "empty_layer" => true},
+               %{"created_by" => command}
              ] = history
+
+      assert "/bin/sh -c #(nop) ADD file:" <> <<_::binary-size(64)>> <> " in / " = command
     end
   end
 end
