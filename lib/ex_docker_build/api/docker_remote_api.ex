@@ -14,13 +14,16 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
       case System.get_env("DOCKER_HOST") do
         "unix://" <> x ->
           "http+unix://#{URI.encode_www_form(x)}/#{version}"
+
         nil ->
           "http+unix://" <> URI.encode_www_form("/var/run/docker.sock") <> "/#{version}"
+
         # "http" <> _ = url ->
         #   "#{url}/#{version}"
         x when is_binary(x) ->
           raise("only docker socket connections are supported at present - please open a PR")
-        end
+      end
+
     endpoint
   end
 

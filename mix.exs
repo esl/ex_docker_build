@@ -43,7 +43,7 @@ defmodule ExDockerBuild.MixProject do
       {:benchee, ">= 1.0.0", only: [:dev, :test]},
       {:rexbug, ">= 1.0.0", only: [:dev, :test]},
       # tracer hex.pm package doesn't include flamegraph scripts..
-      {:tracer, git: "git@github.com:gabiz/tracer.git", branch: "master", only: [:dev, :test]},
+      {:tracer, git: "git@github.com:gabiz/tracer.git", branch: "master", only: [:dev, :test]}
     ]
   end
 
