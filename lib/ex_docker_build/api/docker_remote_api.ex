@@ -1,18 +1,32 @@
 defmodule ExDockerBuild.API.DockerRemoteAPI do
   alias ExDockerBuild.API.Docker
   alias ExDockerBuild.HttpStream
+  alias ExDockerBuild.API.VolumeFilter
   @behaviour Docker
 
-  @version "v1.37"
-  @endpoint URI.encode_www_form("/var/run/docker.sock")
-  @protocol "http+unix"
-  @url "#{@protocol}://#{@endpoint}/#{@version}"
   @json_header {"Content-Type", "application/json"}
   @tar_header {"Content-Type", "application/tar"}
 
+  def url() do
+    version = "v1.37"
+
+    endpoint =
+      case System.get_env("DOCKER_HOST") do
+        "unix://" <> x ->
+          "http+unix://#{URI.encode_www_form(x)}/#{version}"
+        nil ->
+          "http+unix://" <> URI.encode_www_form("/var/run/docker.sock") <> "/#{version}"
+        # "http" <> _ = url ->
+        #   "#{url}/#{version}"
+        x when is_binary(x) ->
+          raise("only docker socket connections are supported at present - please open a PR")
+        end
+    endpoint
+  end
+
   @impl Docker
   def commit(container_id, payload) do
-    "#{@url}/commit"
+    "#{url()}/commit"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"container" => container_id}))
     |> URI.to_string()
@@ -25,7 +39,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
     params = if name != "", do: Map.merge(params, %{name: name}), else: params
 
-    "#{@url}/containers/create"
+    "#{url()}/containers/create"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(params))
     |> URI.to_string()
@@ -34,7 +48,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def remove_container(container_id, params \\ %{}) do
-    "#{@url}/containers/#{container_id}"
+    "#{url()}/containers/#{container_id}"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(params))
     |> URI.to_string()
@@ -43,12 +57,12 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def start_container(container_id) do
-    HTTPoison.post("#{@url}/containers/#{container_id}/start", "", [])
+    HTTPoison.post("#{url()}/containers/#{container_id}/start", "", [])
   end
 
   @impl Docker
   def stop_container(container_id) do
-    "#{@url}/containers/#{container_id}/stop"
+    "#{url()}/containers/#{container_id}/stop"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{t: 5}))
     |> URI.to_string()
@@ -57,7 +71,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def wait_container(container_id, timeout \\ :infinity) do
-    HTTPoison.post("#{@url}/containers/#{container_id}/wait", "", [],
+    HTTPoison.post("#{url()}/containers/#{container_id}/wait", "", [],
       timeout: timeout,
       recv_timeout: timeout
     )
@@ -69,7 +83,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     final_params = Map.merge(default_params, params)
 
     url =
-      "#{@url}/containers/#{container_id}/logs"
+      "#{url()}/containers/#{container_id}/logs"
       |> URI.parse()
       |> Map.put(:query, URI.encode_query(final_params))
       |> URI.to_string()
@@ -94,7 +108,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
         "noOverwriteDirNonDir" => false
       })
 
-    "#{@url}/containers/#{container_id}/archive"
+    "#{url()}/containers/#{container_id}/archive"
     |> URI.parse()
     |> Map.put(:query, query_params)
     |> URI.to_string()
@@ -104,22 +118,43 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
   @impl Docker
   def pull(image) do
     # TODO:  ADD support for X-Registry-Auth
-    "#{@url}/images/create"
+    "#{url()}/images/create"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"fromImage" => image}))
     |> URI.to_string()
+    |> IO.inspect()
     |> HTTPoison.post("", [], timeout: :infinity, recv_timeout: :infinity)
   end
 
   @impl Docker
   def create_volume(payload) do
-    HTTPoison.post("#{@url}/volumes/create", Poison.encode!(payload), [@json_header])
+    HTTPoison.post("#{url()}/volumes/create", Poison.encode!(payload), [@json_header])
   end
 
   @impl Docker
-  def get_volumes(filters \\ %{}) do
-    filters = Poison.encode!(%{"filters" => filters})
-    "#{@url}/volumes"
+  def get_volumes() do
+    get_volumes(%VolumeFilter{})
+  end
+
+  @impl Docker
+  def get_volumes(filter) do
+    reducer = fn {x, y}, acc ->
+      Map.put(acc, x, %{y => true})
+    end
+
+    filters =
+      Map.from_struct(filter)
+      |> Map.to_list()
+      |> Enum.filter(fn
+        {_, nil} -> false
+        _ -> true
+      end)
+      |> Enum.reduce(%{}, reducer)
+
+    filters = Poison.encode!(filters)
+    filters = URI.encode_query(%{"filters" => filters})
+
+    "#{url()}/volumes"
     |> URI.parse()
     |> Map.put(:query, filters)
     |> URI.to_string()
@@ -128,19 +163,19 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def inspect_volume(volume_name) do
-    "#{@url}/volumes/#{volume_name}"
+    "#{url()}/volumes/#{volume_name}"
     |> HTTPoison.get()
   end
 
   @impl Docker
   def delete_volume(volume_name) do
-    "#{@url}/volumes/#{volume_name}"
+    "#{url()}/volumes/#{volume_name}"
     |> HTTPoison.delete()
   end
 
   @impl Docker
   def delete_image(image_id, force) do
-    "#{@url}/images/#{image_id}"
+    "#{url()}/images/#{image_id}"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"force" => force}))
     |> URI.to_string()
@@ -163,7 +198,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
       Poison.encode!(docker_credentials)
       |> Base.encode64()
 
-    "#{@url}/images/#{image_id}/push"
+    "#{url()}/images/#{image_id}/push"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"tag" => tag}))
     |> URI.to_string()
@@ -172,7 +207,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def tag_image(image_id, repo, tag) do
-    "#{@url}/images/#{image_id}/tag"
+    "#{url()}/images/#{image_id}/tag"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"repo" => repo, "tag" => tag}))
     |> URI.to_string()
@@ -181,7 +216,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def container_inspect(container_id, size) do
-    "#{@url}/containers/#{container_id}/json"
+    "#{url()}/containers/#{container_id}/json"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"size" => size}))
     |> URI.to_string()
@@ -190,7 +225,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def get_archive(container_id, path) do
-    "#{@url}/containers/#{container_id}/archive"
+    "#{url()}/containers/#{container_id}/archive"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"path" => path}))
     |> URI.to_string()
@@ -199,7 +234,7 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
 
   @impl Docker
   def image_history(image_id) do
-    "#{@url}/images/#{image_id}/history"
+    "#{url()}/images/#{image_id}/history"
     |> HTTPoison.get()
   end
 end

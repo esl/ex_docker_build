@@ -90,6 +90,26 @@ path = Path.expand("./test/fixtures")
 Then if you run `ls ~/test` you should see a file named `myfile.txt` with
 `hello world!!!` as content
 
+## Environment and debugging
+
+This library respects the environmental variable `DOCKER_HOST` this can be 
+very helpful when debugging, for example: 
+
+In on terminal run `socat` :
+
+```
+socat -v UNIX-LISTEN:/tmp/fake,fork UNIX-CONNECT:/var/run/docker.sock
+```
+
+In the terminal where you are running `ex_docker_build` set the docker socket :
+
+```
+export DOCKER_HOST=unix:///tmp/fake
+```
+
+Now you can observe all interactions with the Docker API server.
+
+
 ## Limitations
 
 - Doesn't support relative paths in the container when `COPY`ing
