@@ -4,6 +4,15 @@ language: elixir
 elixir: '1.7.3'
 otp_release: '20.3.8.5'
 
+before_install:
+  - docker pull alpine:3.8
 
 services:
   - docker
+
+matrix:
+  include:
+    - elixir: '1.8.2'
+      otp_release: '21.0.9'
+    - elixir: '1.8.2'
+      otp_release: '22.0.1'
