@@ -211,7 +211,7 @@ defmodule ExDockerBuild do
         {:error, Poison.decode!(body)}
 
       {:error, %{status_code: 500, message: message}} ->
-      {:error, message}
+        {:error, message}
     end
   end
 
@@ -374,9 +374,9 @@ defmodule ExDockerBuild do
             value =
               case new_key do
                 "created" ->
-                    v
-                    |> DateTime.from_unix!()
-                    |> DateTime.to_iso8601()
+                  v
+                  |> DateTime.from_unix!()
+                  |> DateTime.to_iso8601()
 
                 _ ->
                   v
