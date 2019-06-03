@@ -3,6 +3,7 @@ defmodule ExDockerBuild do
 
   alias ExDockerBuild.Tar
   alias ExDockerBuild.API.{Docker, DockerRemoteAPI}
+  alias ExDockerBuild.API.VolumeFilter
 
   @spec create_layer(map(), keyword()) :: {:ok, Docker.image_id()} | {:error, any()}
   def create_layer(payload, opts \\ []) do
@@ -201,8 +202,8 @@ defmodule ExDockerBuild do
     end
   end
 
-  @spec get_volumes(map()) :: {:ok, any()} | {:error, any()}
-  def get_volumes(filters \\ %{}) do
+  @spec get_volumes(VolumeFilter.t()) :: {:ok, any()} | {:error, any()}
+  def get_volumes(filters \\ %VolumeFilter{}) do
     case DockerRemoteAPI.get_volumes(filters) do
       {:ok, %{status_code: 200, body: body}} ->
         {:ok, Poison.decode!(body)}

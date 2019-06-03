@@ -4,6 +4,8 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
   import ExUnit.CaptureLog
   alias ExDockerBuild.DockerBuild
 
+  alias ExDockerBuild.API.VolumeFilter
+
   @moduletag :integration
 
   @cwd File.cwd!()
@@ -119,7 +121,7 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
         assert {:ok, image_id} = DockerBuild.build(instructions, "")
       end)
 
-      {:ok, body} = ExDockerBuild.get_volumes(%{"name" => volume_name})
+      {:ok, body} = ExDockerBuild.get_volumes(%VolumeFilter{name: volume_name})
       assert %{"Volumes" => [%{"Name" => volume_name, "Scope" => "local"}]} = body
       {:ok, volume_body} = ExDockerBuild.inspect_volume(volume_name)
       assert %{"Name" => ^volume_name, "Scope" => "local"} = volume_body

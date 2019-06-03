@@ -1,5 +1,6 @@
 defmodule ExDockerBuild.API.Docker do
   alias HTTPoison.{Response, Error}
+  alias ExDockerBuild.API.VolumeFilter
 
   @type image_id :: String.t()
   @type container_id :: String.t()
@@ -32,7 +33,8 @@ defmodule ExDockerBuild.API.Docker do
               {:ok, Response.t()} | {:error, Error.t()}
   @callback pull(image_id()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback create_volume(map()) :: {:ok, Response.t()} | {:error, Error.t()}
-  @callback get_volumes(map()) :: {:ok, Response.t()} | {:error, Error.t()}
+  @callback get_volumes() :: {:ok, Response.t()} | {:error, Error.t()}
+  @callback get_volumes(VolumeFilter.t()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback inspect_volume(String.t()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback delete_volume(String.t()) :: {:ok, Response.t()} | {:error, Error.t()}
   @callback push_image(image_id(), String.t(), docker_credentials()) ::
