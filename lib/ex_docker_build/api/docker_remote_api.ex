@@ -122,7 +122,6 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"fromImage" => image}))
     |> URI.to_string()
-    |> IO.inspect()
     |> HTTPoison.post("", [], timeout: :infinity, recv_timeout: :infinity)
   end
 
