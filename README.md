@@ -1,6 +1,7 @@
 # Docker Build Clone using Elixir
 
 [![Build Status](https://travis-ci.org/esl/ex_docker_build.svg?branch=master)](https://travis-ci.org/esl/ex_docker_build)
+[![Coverage Status](https://coveralls.io/repos/github/esl/ex_docker_build/badge.svg)](https://coveralls.io/github/esl/ex_docker_build)
 
 ## What's the special thing about this?
 
