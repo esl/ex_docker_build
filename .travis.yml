@@ -7,6 +7,9 @@ otp_release: '20.3.8.5'
 before_install:
   - docker pull alpine:3.8
 
+script:
+  - MIX_ENV=test mix do deps.get, compile, coveralls.travis
+
 services:
   - docker
 
