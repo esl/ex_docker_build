@@ -4,7 +4,7 @@ defmodule ExDockerBuild.MixProject do
   def project do
     [
       app: :ex_docker_build,
-      version: "0.6.0",
+      version: "0.6.1",
       elixir: "~> 1.7",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -57,7 +57,6 @@ defmodule ExDockerBuild.MixProject do
       links: %{"GitHub" => "https://github.com/sescobb27/ex_docker_build"},
       source_url: "https://github.com/sescobb27/ex_docker_build",
       homepage_url: "https://github.com/sescobb27/ex_docker_build",
-      organization: "erlang_solutions",
       files: ~w(lib .formatter.exs mix.exs README.md LICENSE)
     ]
   end

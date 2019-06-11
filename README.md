@@ -17,7 +17,7 @@ by adding `ex_docker_build` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:ex_docker_build, "~> 0.6.0"}
+    {:ex_docker_build, "~> 0.6.1"}
   ]
 end
 ```
@@ -27,7 +27,6 @@ and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at [https://hexdocs.pm/ex_docker_build](https://hexdocs.pm/ex_docker_build).
 
 ## Usage
-
 
 ### Example 1 - **Elixir Release with Distillery**
 
@@ -93,8 +92,8 @@ Then if you run `ls ~/test` you should see a file named `myfile.txt` with
 
 ## Environment and debugging
 
-This library respects the environmental variable `DOCKER_HOST` this can be 
-very helpful when debugging, for example: 
+This library respects the environmental variable `DOCKER_HOST` this can be
+very helpful when debugging, for example:
 
 In on terminal run `socat` :
 
@@ -110,13 +109,12 @@ export DOCKER_HOST=unix:///tmp/fake
 
 Now you can observe all interactions with the Docker API server.
 
-
 ## Limitations
 
 - Doesn't support relative paths in the container when `COPY`ing
   - `COPY ./relative/path/to/origin:/absolute/path/to/destination`
 - Doesn't support standard `VOLUMES`, it only supports the following `VOLUME`s type
-with custom syntax
+  with custom syntax
   - [Bind Mounts](https://docs.docker.com/storage/bind-mounts/) e.g `VOLUME ~/path/to/host/dir:/path/to/container/dir`
   - [Named Volumes](https://docs.docker.com/storage/volumes/) e.g `VOLUME volume_name` and then using it like `VOLUME volume_name:/path/to/container/dir`
 
@@ -124,4 +122,3 @@ with custom syntax
 
 - [ ] add support for more docker file instructions
 - [ ] resolve TODOs inside the source code
-
