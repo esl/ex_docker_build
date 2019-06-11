@@ -56,7 +56,9 @@ defmodule ExDockerBuild.MixProject do
       licenses: ["MIT"],
       links: %{"GitHub" => "https://github.com/sescobb27/ex_docker_build"},
       source_url: "https://github.com/sescobb27/ex_docker_build",
-      homepage_url: "https://github.com/sescobb27/ex_docker_build"
+      homepage_url: "https://github.com/sescobb27/ex_docker_build",
+      organization: "erlang_solutions",
+      files: ~w(lib .formatter.exs mix.exs README.md LICENSE)
     ]
   end
 end
