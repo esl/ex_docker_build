@@ -200,11 +200,14 @@ defmodule ExDockerBuild.API.DockerRemoteAPI do
       Poison.encode!(docker_credentials)
       |> Base.encode64()
 
+    # pushing images to docker hub is really time consuming because images can be
+    # really huge, so we don't want to timeout on it
+
     "#{url()}/images/#{image_id}/push"
     |> URI.parse()
     |> Map.put(:query, URI.encode_query(%{"tag" => tag}))
     |> URI.to_string()
-    |> HTTPoison.post("", [{"X-Registry-Auth", header}])
+    |> HTTPoison.post("", [{"X-Registry-Auth", header}], recv_timeout: :infinity)
   end
 
   @impl Docker
