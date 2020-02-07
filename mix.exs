@@ -33,7 +33,7 @@ defmodule ExDockerBuild.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:httpoison, "~> 1.3.0"},
+      {:httpoison, "~> 1.5.1"},
       {:hackney, "~> 1.13.0"},
       {:poison, "~> 4.0"},
       {:excoveralls, "~> 0.9", only: :test},
