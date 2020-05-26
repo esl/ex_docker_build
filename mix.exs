@@ -34,7 +34,7 @@ defmodule ExDockerBuild.MixProject do
   defp deps do
     [
       {:httpoison, "~> 1.3.0"},
-      {:hackney, "~> 1.13.0"},
+      {:hackney, "~> 1.16.0"},
       {:poison, "~> 4.0"},
       {:excoveralls, "~> 0.9", only: :test},
       {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false},
