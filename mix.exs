@@ -37,7 +37,7 @@ defmodule ExDockerBuild.MixProject do
       {:hackney, "~> 1.13.0"},
       {:poison, "~> 4.0"},
       {:excoveralls, "~> 0.9", only: :test},
-      {:dialyxir, "~> 1.0.0-rc.3", only: [:dev], runtime: false},
+      {:dialyxir, "~> 1.1.0", only: [:dev], runtime: false},
       {:mock, "~> 0.3.2", only: :test},
       {:ex_doc, ">= 0.0.0", only: :dev},
       {:benchee, ">= 1.0.0", only: [:dev, :test]},
