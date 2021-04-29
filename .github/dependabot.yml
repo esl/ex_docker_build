@@ -1,0 +1,25 @@
+version: 2
+updates:
+- package-ecosystem: mix
+  directory: "/"
+  schedule:
+    interval: daily
+  open-pull-requests-limit: 10
+  ignore:
+  - dependency-name: ex_doc
+    versions:
+    - 0.23.0
+    - 0.24.0
+    - 0.24.1
+  - dependency-name: hackney
+    versions:
+    - 1.17.0
+    - 1.17.1
+    - 1.17.2
+    - 1.17.3
+  - dependency-name: rexbug
+    versions:
+    - 1.0.4
+  - dependency-name: dialyxir
+    versions:
+    - 1.0.0
