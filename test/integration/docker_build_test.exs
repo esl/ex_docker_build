@@ -259,4 +259,50 @@ defmodule ExDockerBuild.Integration.DockerBuildTest do
       assert "/bin/sh -c #(nop) ADD file:" <> <<_::binary-size(64)>> <> " in / " = command
     end
   end
+
+  describe "defining variables at build-time" do
+    test "setting ARG instruction" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"ARG", "tag=\"latest\""},
+        {"RUN", "mkdir /myvol"},
+        {"RUN", "echo \"hello-world!!!!\" > /myvol/greeting"}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+        end)
+
+      assert log =~ "STEP 1/4 : FROM alpine:latest"
+      assert log =~ "pulling image alpine:latest"
+      assert log =~ "STEP 2/4 : ARG tag=\"latest\""
+      assert log =~ "STEP 3/4 : RUN mkdir /myvol"
+      assert log =~ "STEP 4/4 : RUN echo \"hello-world!!!!\" > /myvol/greeting"
+    end
+
+    test "setting multiple args" do
+      instructions = [
+        {"FROM", "alpine:latest"},
+        {"ARG", "tag=\"latest\""},
+        {"ARG", "A_VARIABLE="},
+        {"ENV", "an_env_var=$A_VARIABLE"},
+        {"RUN", "mkdir /myvol"},
+        {"RUN", "echo \"hello-world!!!!\" > /myvol/greeting"}
+      ]
+
+      log =
+        capture_log(fn ->
+          assert {:ok, image_id} = DockerBuild.build(instructions, "")
+        end)
+
+      assert log =~ "STEP 1/6 : FROM alpine:latest"
+      assert log =~ "pulling image alpine:latest"
+      assert log =~ "STEP 2/6 : ARG tag=\"latest\""
+      assert log =~ "STEP 3/6 : ARG A_VARIABLE="
+      assert log =~ "STEP 4/6 : ENV an_env_var=$A_VARIABLE"
+      assert log =~ "STEP 5/6 : RUN mkdir /myvol"
+      assert log =~ "STEP 6/6 : RUN echo \"hello-world!!!!\" > /myvol/greeting"
+    end
+  end
 end
